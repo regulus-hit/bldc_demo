@@ -11,8 +11,8 @@
 
 #define FOC_PERIOD          0.0001F
 
-#define DEAD_TIME         ((u16) 5)
-#define PWM_DEAD_TIME     (u16)((unsigned long long)PWM_TIM_CLOCK/2*(unsigned long long)DEAD_TIME/1000000000uL) 
+#define DEAD_TIME         ((uint16_t) 5)
+#define PWM_DEAD_TIME     (uint16_t)((unsigned long long)PWM_TIM_CLOCK/2*(unsigned long long)DEAD_TIME/1000000000uL) 
 
 #define PWM_TIM_CLK           RCC_APB2Periph_TIM1
 

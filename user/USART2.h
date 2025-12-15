@@ -1,4 +1,5 @@
 #ifndef __USART2_H_
+#include <stdint.h>
 #define __USART2_H_
 
 

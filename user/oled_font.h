@@ -1,4 +1,5 @@
 #ifndef __OLED_FONT_H_
+#include <stdint.h>
 #define __OLED_FONT_H_
 
 
