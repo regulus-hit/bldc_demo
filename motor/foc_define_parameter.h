@@ -51,6 +51,11 @@
  * Reduces SVPWM errors from DC link ripple, improves voltage utilization */
 #define ENABLE_VBUS_FILTERING
 
+/* Hall Sensor Position Interpolation: Interpolates position between Hall edges
+ * Provides higher resolution position feedback for HALL_FOC_SELECT mode
+ * Only active when HALL_FOC_SELECT mode is enabled */
+#define ENABLE_HALL_INTERPOLATION
+
 /*******************************************************************************
  * Dead-Time Compensation Parameters
  ******************************************************************************/
@@ -129,5 +134,41 @@
 #define HYBRID_HALL_MAX_POSITION_ERROR  1.047f  /* PI/3 radians */
 
 #endif  /* HYBRID_HALL_EKF_SELECT */
+
+/*******************************************************************************
+ * Hall Sensor Interpolation Parameters (HALL_FOC_SELECT mode only)
+ * Used when ENABLE_HALL_INTERPOLATION is defined
+ ******************************************************************************/
+#ifdef ENABLE_HALL_INTERPOLATION
+
+/* Minimum speed for Hall interpolation activation (rad/s electrical)
+ * Below this speed, use pure Hall sensor position (no interpolation)
+ * 60 RPM mechanical = 6.28 rad/s mechanical
+ * For typical BLDC motor with 3 pole pairs: 60 RPM mechanical = 18.84 rad/s electrical
+ * Set to ~20 rad/s electrical for safety margin */
+#define HALL_INTERPOLATION_MIN_SPEED     20.0f
+
+/* Enable automatic misalignment offset detection and correction
+ * Hall sensors may be misaligned to UVW motor phases by a small offset
+ * When enabled, automatically detects and compensates for this offset */
+#define ENABLE_HALL_MISALIGNMENT_CORRECTION
+
+/* Initial misalignment offset (radians)
+ * This is the initial guess for Hall sensor misalignment relative to motor axes
+ * Will be automatically adjusted if ENABLE_HALL_MISALIGNMENT_CORRECTION is enabled
+ * Typical range: -0.2 to +0.2 radians (-11° to +11°) */
+#define HALL_MISALIGNMENT_OFFSET_INITIAL  0.0f
+
+/* Misalignment correction filter coefficient (0 to 1)
+ * Higher values = faster adaptation, lower values = more stable
+ * Typical: 0.001 for slow stable adaptation */
+#define HALL_MISALIGNMENT_FILTER_COEFF    0.001f
+
+/* Maximum allowed misalignment correction (radians)
+ * Limits the automatic correction to prevent runaway
+ * Typical: ±0.35 radians (±20°) */
+#define HALL_MISALIGNMENT_MAX_CORRECTION  0.35f
+
+#endif  /* ENABLE_HALL_INTERPOLATION */
 
 #endif  /* __FOC_DEFINE_PARAMETER_H__ */

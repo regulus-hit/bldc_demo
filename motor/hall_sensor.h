@@ -18,6 +18,38 @@ extern float hall_angle;		/* Rotor angle from Hall sensors */
 extern float hall_angle_add;	/* Angle increment per sample */
 extern float hall_speed;		/* Rotor speed from Hall sensors */
 
+#ifdef ENABLE_HALL_INTERPOLATION
+/* Hall sensor interpolation state */
+extern float hall_angle_interpolated;  /* Interpolated rotor angle (rad) */
+extern float hall_misalignment_offset; /* Detected misalignment offset (rad) */
+extern uint32_t hall_edge_timestamp;   /* Timestamp of last Hall edge (system ticks) */
+extern uint32_t hall_edge_interval;    /* Time between last two Hall edges (system ticks) */
+
+/**
+ * @brief Initialize Hall sensor interpolation
+ * 
+ * Initializes interpolation state variables and misalignment correction.
+ * Must be called once before motor operation.
+ */
+void hall_interpolation_initialize(void);
+
+/**
+ * @brief Update Hall sensor interpolation
+ * 
+ * Called at control loop frequency (10kHz) to interpolate position between Hall edges.
+ * Uses velocity-based linear interpolation for higher resolution position feedback.
+ * 
+ * Algorithm:
+ * 1. Calculate time elapsed since last Hall edge
+ * 2. Interpolate position: angle = last_edge_angle + velocity * time_elapsed
+ * 3. Apply misalignment offset correction if enabled
+ * 4. Normalize angle to [0, 2*PI] range
+ * 
+ * @param current_time Current system timestamp (microseconds or timer ticks)
+ */
+void hall_interpolation_update(uint32_t current_time);
+#endif
+
 void hall_sensor_c_tim2_sub(void);
 
 #endif

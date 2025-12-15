@@ -234,8 +234,13 @@ void motor_run(void)
 		Speed_Pid.I_Sum = Iq_ref;				/* Pre-load integral to prevent windup */
 	}
 	
-	/* Position and speed from Hall sensors */
-	FOC_Input.theta = hall_angle;
+	/* Position and speed from Hall sensors
+	 * Use interpolated position when available for higher resolution */
+#ifdef ENABLE_HALL_INTERPOLATION
+	FOC_Input.theta = hall_angle_interpolated;  /* Interpolated position (higher resolution) */
+#else
+	FOC_Input.theta = hall_angle;               /* Raw Hall position (60° resolution) */
+#endif
 	FOC_Input.speed_fdk = hall_speed * 2.0f * PI;
 
 #endif
@@ -455,6 +460,12 @@ void adc_c_adc_sub(void)
 			{
 				hall_angle -= 2.0f * PI;
 			}
+			
+#if defined(HALL_FOC_SELECT) && defined(ENABLE_HALL_INTERPOLATION)
+			/* Update Hall sensor interpolation for higher resolution position feedback
+			 * Uses current timer value to interpolate position between Hall edges */
+			hall_interpolation_update(TIM_GetCounter(HALL_TIM));
+#endif
 			
 			/* Execute main FOC control loop */
 			motor_run();
