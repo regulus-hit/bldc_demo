@@ -11,7 +11,13 @@
  * - No integral windup
  * - Easier tuning via bandwidth parameters
  * - Better transient response
+ * 
+ * This file is compiled only when USE_SPEED_ADRC is defined
  **********************************/
+#include "foc_define_parameter.h"
+
+#ifdef USE_SPEED_ADRC
+
 #include "speed_adrc.h"
 #include "main.h"  /* For MATH_2PI constant */
 
@@ -183,3 +189,5 @@ void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_t
      * The ESO automatically adapts to steady-state disturbances via z3,
      * eliminating the need for anti-windup schemes. */
 }
+
+#endif  /* USE_SPEED_ADRC */

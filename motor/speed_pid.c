@@ -1,7 +1,13 @@
 /**********************************
  * Speed PI Controller Implementation
  * Outer loop speed control for BLDC motor
+ * 
+ * This file is compiled only when USE_SPEED_PID is defined
  **********************************/
+#include "foc_define_parameter.h"
+
+#ifdef USE_SPEED_PID
+
 #include "speed_pid.h"
 
 #define SPEED_PID_PERIOD 0.001F		/* Speed loop period: 1ms (1kHz) */
@@ -88,4 +94,5 @@ void speed_controller_init(void)
 	Speed_Pid.I_Sum = 0.0f;
 }
 
+#endif  /* USE_SPEED_PID */
 
