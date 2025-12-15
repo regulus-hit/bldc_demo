@@ -1,6 +1,8 @@
 /**********************************
-        
-**********************************/
+ * Extended Kalman Filter (EKF) Wrapper for PMSM Sensorless Control
+ * Estimates rotor position and speed from voltage and current measurements
+ * Auto-generated wrapper for Simulink-generated EKF code
+ **********************************/
 #include "main.h"
 #if defined(MATLAB_MEX_FILE)
 #include "tmwtypes.h"
@@ -9,18 +11,16 @@
 #include "rtwtypes.h"
 #endif
 
-
-
-
-#ifdef  SIMULINK_USE_ARM_MATH  
+#ifdef SIMULINK_USE_ARM_MATH
 #include "arm_math.h"
 #else
 #include <math.h>
 #endif
 
-float Rs;
-float Ls;
-float flux;
+/* Motor electrical parameters (updated via identification) */
+float Rs;    /* Stator resistance (Ohms) */
+float Ls;    /* Stator inductance (Henries) */
+float flux;  /* Permanent magnet flux linkage (Wb) */
 
 float Q_0_0;
 //float Q_0_1;
@@ -192,90 +192,111 @@ float tempa_3_0;
 #define u_width 7
 #define y_width 1
 
+/**
+ * @brief Initialize Extended Kalman Filter
+ * 
+ * Initializes EKF matrices and motor parameters for sensorless position estimation:
+ * - Loads motor electrical parameters (Rs, Ls, flux) from configuration
+ * - Initializes process noise covariance matrix Q (state uncertainty)
+ * - Initializes measurement noise covariance matrix R (sensor noise)
+ * - Initializes state covariance matrix P0 (initial estimation uncertainty)
+ * - Configures observation matrix H and input matrix B
+ * - Sets sample time T = 100µs (10kHz control frequency)
+ * 
+ * EKF State Vector: [i_alpha, i_beta, omega, theta]
+ * - i_alpha, i_beta: Stator currents in stationary frame
+ * - omega: Electrical angular velocity (rad/s)
+ * - theta: Electrical rotor position (radians)
+ * 
+ * @param xD Discrete state vector storage
+ */
 void stm32_ekf_Start_wrapper(real_T *xD)
 {
+	/* Load motor electrical parameters */
+	Rs = RS_PARAMETER;      /* Stator resistance */
+	Ls = LS_PARAMETER;      /* Stator inductance */
+	flux = FLUX_PARAMETER;  /* PM flux linkage */
 
+	/* Process noise covariance matrix Q (diagonal elements only) */
+	Q_0_0 = 0.1f;   /* Current alpha uncertainty */
+	Q_1_1 = 0.1f;   /* Current beta uncertainty */
+	Q_2_2 = 0.1f;   /* Speed uncertainty */
+	Q_3_3 = 0.001f; /* Position uncertainty */
 
-Rs   = RS_PARAMETER;   //电阻
-Ls   = LS_PARAMETER;   //电感
-flux = FLUX_PARAMETER; //磁链
+	/* Measurement noise covariance matrix R */
+	R_0_0 = 0.2f;  /* Current alpha measurement noise */
+	R_1_1 = 0.2f;  /* Current beta measurement noise */
 
+	/* Sample time */
+	T = 0.0001f;  /* 100µs = 10kHz */
 
-Q_0_0 = 0.1f;
-//Q_0_1 = 0.0f;
-//Q_0_2 = 0.0f;
-//Q_0_3 = 0.0f;
-//Q_1_0 = 0.0f;
-Q_1_1 = 0.1f;
-//Q_1_2 = 0.0f;
-//Q_1_3 = 0.0f;
-//Q_2_0 = 0.0f;
-//Q_2_1 = 0.0f;
-Q_2_2 = 0.1f;
-//Q_2_3 = 0.0f;
-//Q_3_0 = 0.0f;
-//Q_3_1 = 0.0f;
-//Q_3_2 = 0.0f;
-Q_3_3 = 0.001f;
+	/* Observation matrix H (we measure currents directly) */
+	H_0_0 = 1.0f;  /* Current alpha observable */
+	H_1_1 = 1.0f;  /* Current beta observable */
 
-R_0_0 = 0.2f;
-//R_0_1 = 0.0f;
-//R_1_0 = 0.0f;
-R_1_1 = 0.2f;
-T = 0.0001f;
+	/* Input matrix B (voltage to current) */
+	B_0_0 = 1.0f / Ls;  /* Voltage alpha to current alpha */
+	B_1_1 = 1.0f / Ls;  /* Voltage beta to current beta */
 
-H_0_0 = 1.0f;
-//H_0_1 = 0.0f;
-//H_0_2 = 0.0f;
-//H_0_3 = 0.0f;
-//H_1_0 = 0.0f;
-H_1_1 = 1.0f;
-//H_1_2 = 0.0f;
-//H_1_3 = 0.0f;
-
-B_0_0 = 1.0f/Ls;
-//B_0_1 = 0.0f;
-//B_1_0 = 0.0f;
-B_1_1 = 1.0f/Ls;
-//B_2_0 = 0.0f;
-//B_2_1 = 0.0f;
-//B_3_0 = 0.0f;
-//B_3_1 = 0.0f;
-
-P0_0_0 = 0.0f;
-P0_0_1 = 0.0f;
-P0_0_2 = 0.0f;
-P0_0_3 = 0.0f;
-P0_1_0 = 0.0f;
-P0_1_1 = 0.0f;
-P0_1_2 = 0.0f;
-P0_1_3 = 0.0f;
-P0_2_0 = 0.0f;
-P0_2_1 = 0.0f;
-P0_2_2 = 0.0f;
-P0_2_3 = 0.0f;
-P0_3_0 = 0.0f;
-P0_3_1 = 0.0f;
-P0_3_2 = 0.0f;
-P0_3_3 = 0.0f;
-
+	/* Initialize state covariance matrix P0 to zero (high confidence) */
+	P0_0_0 = 0.0f;
+	P0_0_1 = 0.0f;
+	P0_0_2 = 0.0f;
+	P0_0_3 = 0.0f;
+	P0_1_0 = 0.0f;
+	P0_1_1 = 0.0f;
+	P0_1_2 = 0.0f;
+	P0_1_3 = 0.0f;
+	P0_2_0 = 0.0f;
+	P0_2_1 = 0.0f;
+	P0_2_2 = 0.0f;
+	P0_2_3 = 0.0f;
+	P0_3_0 = 0.0f;
+	P0_3_1 = 0.0f;
+	P0_3_2 = 0.0f;
+	P0_3_3 = 0.0f;
 }
 
+/**
+ * @brief EKF Output Function
+ * 
+ * Extracts estimated states from EKF and outputs them.
+ * Called by Simulink-generated code to get current state estimates.
+ * 
+ * @param u Input vector (not used in output stage)
+ * @param y Output vector: [i_alpha, i_beta, omega, theta]
+ * @param xD Discrete state vector containing EKF estimates
+ */
 void stm32_ekf_Outputs_wrapper(const real32_T *u,
-			real32_T *y,
-			const real_T *xD)
+                                real32_T *y,
+                                const real_T *xD)
 {
-
-y[0] = xD[0];
-y[1] = xD[1];
-y[2] = xD[2];
-y[3] = xD[3];
+	y[0] = xD[0];  /* Estimated current alpha */
+	y[1] = xD[1];  /* Estimated current beta */
+	y[2] = xD[2];  /* Estimated electrical speed (rad/s) */
+	y[3] = xD[3];  /* Estimated electrical position (rad) */
 }
 
-
+/**
+ * @brief EKF Update Function (State Prediction and Correction)
+ * 
+ * Implements the Extended Kalman Filter algorithm:
+ * 1. State Prediction: Predicts next state based on motor model
+ * 2. Covariance Prediction: Projects error covariance forward
+ * 3. Kalman Gain: Computes optimal gain
+ * 4. State Correction: Updates state estimate with measurements
+ * 5. Covariance Update: Updates error covariance
+ * 
+ * Input u[7]: [v_alpha, v_beta, i_alpha_measured, i_beta_measured, ...]
+ * State xD[4]: [i_alpha, i_beta, omega, theta]
+ * 
+ * @param u Input measurements: voltages and currents
+ * @param y Output estimates (updated by Outputs_wrapper)
+ * @param xD Discrete state vector (updated in-place)
+ */
 void stm32_ekf_Update_wrapper(const real32_T *u,
-			real32_T *y,
-			real_T *xD)
+                               real32_T *y,
+                               real_T *xD)
 {
 
 
