@@ -12,6 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-12-15
+
+### Added
+- 🤖 **PID Auto-Tuning for Current Loop Controllers** (PR #TBD)
+  - Model-based automatic optimization of Id and Iq PI controller gains
+  - Uses identified motor parameters (R, L) from existing RLS algorithms
+  - Algorithm: Kp = L × ωc, Ki = R × ωc (TI InstaSPIN approach)
+  - State machine with 7 states: IDLE, WAIT_STABLE, IDENTIFY_PARAMS, CALCULATE_GAINS, APPLY_GAINS, COMPLETE, FAILED
+  - Configurable via `ENABLE_PID_AUTOTUNE` macro (disabled by default)
+  - Bandwidth configurable: 500-2000 Hz (default 1000 Hz for 10 kHz PWM)
+  - Safety features: parameter validation, timeout, automatic rollback on failure
+  - Zero dynamic allocation, bounded execution time (~10 seconds max)
+  - New files: `motor/pid_autotune.c` and `motor/pid_autotune.h`
+  - Comprehensive documentation in `docs/pid_autotune_implementation.md` (15KB guide)
+  - API: `foc_start_pid_autotune()`, `foc_stop_pid_autotune()`, `foc_get_autotune_status()`
+
+### Changed
+- 🤖 Modified `motor/foc_algorithm.c` to integrate auto-tuning step
+- 🤖 Updated `motor/foc_define_parameter.h` with auto-tune configuration parameters
+- 🤖 Extended `motor/foc_algorithm.h` with auto-tune API declarations
+- 🤖 Updated `Keil_Project/stm32_drv8301_keil.uvprojx` to include pid_autotune.c
+- 🤖 Enhanced `user/pc_communication_init.c` with auto-tune telemetry support (optional)
+- 🤖 Updated `docs/project_stat.md` with PID auto-tuning implementation details
+
 ## [1.3.0] - 2025-12-15 20:49:20 +0800
 
 ### Added
@@ -176,6 +200,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Summary of Major Releases
 
+- **v1.4.0**: PID auto-tuning for current loop controllers (automatic gain optimization)
 - **v1.3.0**: Hall sensor interpolation for improved position resolution
 - **v1.2.0**: Hybrid Hall+EKF observer for optimal sensor fusion
 - **v1.1.0**: FOC enhancements (dead-time compensation, field-weakening, Vbus filtering)
@@ -206,7 +231,8 @@ This project follows best practices for embedded motor control development:
 
 ---
 
-[Unreleased]: https://github.com/regulus-hit/bldc_demo/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/regulus-hit/bldc_demo/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/regulus-hit/bldc_demo/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/regulus-hit/bldc_demo/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/regulus-hit/bldc_demo/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/regulus-hit/bldc_demo/compare/v1.0.0...v1.1.0

@@ -146,10 +146,37 @@ extern void foc_algorithm_initialize(void);
  * - Space Vector PWM calculation
  * - EKF state observer update
  * - Motor parameter estimation
+ * - PID auto-tuning (if enabled)
  * 
  * Should be called at PWM frequency (typically 10-20 kHz).
  */
 extern void foc_algorithm_step(void);
+
+#ifdef ENABLE_PID_AUTOTUNE
+/**
+ * @brief Start PID auto-tuning for current loop controllers
+ * 
+ * Initiates automatic tuning of Id and Iq PI controller gains.
+ * Should be called when motor is running at low speed with no/light load.
+ * 
+ * @return 1 if started successfully, 0 if conditions not met
+ */
+extern uint8_t foc_start_pid_autotune(void);
+
+/**
+ * @brief Stop PID auto-tuning
+ * 
+ * Aborts the auto-tuning process and restores original gains.
+ */
+extern void foc_stop_pid_autotune(void);
+
+/**
+ * @brief Get PID auto-tune status
+ * 
+ * @return Auto-tune state (0=idle, 1=running, 2=complete, 3=failed)
+ */
+extern uint8_t foc_get_autotune_status(void);
+#endif
 
 
 

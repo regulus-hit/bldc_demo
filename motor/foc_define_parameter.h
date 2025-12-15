@@ -56,6 +56,51 @@
  * Only active when HALL_FOC_SELECT mode is enabled */
 #define ENABLE_HALL_INTERPOLATION
 
+/* PID Auto-Tuning: Automatically optimizes current loop PI controller gains
+ * Uses identified motor parameters (R, L) to calculate optimal Kp/Ki values
+ * Based on TI InstaSPIN and model-based tuning approach */
+//#define ENABLE_PID_AUTOTUNE
+
+/*******************************************************************************
+ * PID Auto-Tuning Parameters
+ ******************************************************************************/
+#ifdef ENABLE_PID_AUTOTUNE
+/* Target bandwidth for current loop (Hz)
+ * Typical: 1/10 to 1/5 of PWM frequency
+ * For 10 kHz PWM: 1000-2000 Hz is typical
+ * Higher bandwidth = faster response but less stable */
+#define PID_AUTOTUNE_TARGET_BANDWIDTH_HZ   1000.0f
+
+/* Minimum safe bandwidth (Hz)
+ * Sets lower limit to prevent too-slow response */
+#define PID_AUTOTUNE_MIN_BANDWIDTH_HZ      500.0f
+
+/* Maximum safe bandwidth (Hz)
+ * Sets upper limit to prevent instability
+ * Should be less than 1/5 of PWM frequency */
+#define PID_AUTOTUNE_MAX_BANDWIDTH_HZ      2000.0f
+
+/* Safety margin factor (0.5-0.9)
+ * Reduces calculated bandwidth by this factor for extra stability
+ * 0.8 = use 80% of theoretical bandwidth */
+#define PID_AUTOTUNE_SAFETY_MARGIN         0.8f
+
+/* Parameter convergence threshold (0.01-0.1)
+ * Relative change below this triggers convergence
+ * 0.05 = 5% change threshold */
+#define PID_AUTOTUNE_CONVERGENCE_THRESHOLD 0.05f
+
+/* Stability wait time (milliseconds)
+ * Time to wait for motor stabilization before tuning
+ * Typical: 1000-3000 ms */
+#define PID_AUTOTUNE_STABLE_TIME_MS        2000
+
+/* Maximum tuning time (milliseconds)
+ * Auto-tune will abort after this time
+ * Typical: 5000-15000 ms */
+#define PID_AUTOTUNE_MAX_TUNE_TIME_MS      10000
+#endif  /* ENABLE_PID_AUTOTUNE */
+
 /*******************************************************************************
  * Dead-Time Compensation Parameters
  ******************************************************************************/
