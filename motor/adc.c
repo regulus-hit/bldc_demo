@@ -285,7 +285,7 @@ void motor_run(void)
 #ifdef ENABLE_VBUS_FILTERING
 	FOC_Input.Udc = Vbus_filtered;			/* Use filtered DC bus voltage for improved SVPWM accuracy */
 #else
-	FOC_Input.Udc = Vbus;					/* DC bus voltage */
+	FOC_Input.Udc = Vbus;					/* Use unfiltered DC bus voltage (raw measurement) */
 #endif
 
 	/* Motor parameters for state observer and current control */
