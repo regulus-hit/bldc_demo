@@ -47,6 +47,8 @@ typedef struct
  * 
  * Complete Linear ADRC controller for speed regulation.
  * Outer loop controller that generates torque (Iq) reference.
+ * 
+ * NOTE: This is typedef'd as SPEED_PID_DEF for compatibility with existing code.
  */
 typedef struct
 {
@@ -55,14 +57,14 @@ typedef struct
     real32_T kd;            /* Derivative gain for error feedback */
     real32_T Max_Output;    /* Upper output limit (max Iq) */
     real32_T Min_Output;    /* Lower output limit (min Iq) */
-} SPEED_ADRC_DEF;
+} SPEED_PID_DEF;            /* Using PID name for compatibility */
 
 /* Global ADRC controller variables - reuse PID variable names since only one is active */
 extern real32_T Speed_Ref;           /* Speed reference in Hz (shared with PID) */
 extern real32_T Speed_Fdk;           /* Speed feedback in rad/s (shared with PID) */
 extern real32_T Speed_Pid_Out;       /* Controller output -> Iq reference (shared with PID) */
 
-extern SPEED_ADRC_DEF Speed_Pid;     /* ADRC controller instance (shared name with PID) */
+extern SPEED_PID_DEF Speed_Pid;      /* ADRC controller instance (shared name with PID) */
 
 /* ADRC controller parameters (tunable) */
 extern real32_T SPEED_ADRC_WO;           /* Observer bandwidth (rad/s) */
@@ -109,6 +111,6 @@ extern void speed_adrc_initialize(void);
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp);
+extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp);
 
 #endif  /* RTW_HEADER_speed_adrc_h_ */

@@ -13,10 +13,9 @@
  * - Better transient response
  **********************************/
 #include "speed_adrc.h"
-#include "user_define.h"
+#include "main.h"  /* For MATH_2PI constant */
 
 #define SPEED_ADRC_PERIOD 0.001F    /* ADRC loop period: 1ms (1kHz) */
-#define MATH_2PI 6.28318530717959F  /* 2*PI for unit conversion */
 
 /* Speed ADRC controller parameters */
 real32_T SPEED_ADRC_WO = 100.0F;         /* Observer bandwidth: 100 rad/s (typical: 50-200) */
@@ -30,7 +29,7 @@ real32_T Speed_Ref;             /* Speed reference in Hz (shared with PID) */
 real32_T Speed_Fdk;             /* Speed feedback in rad/s (shared with PID) */
 real32_T Speed_Pid_Out;         /* Controller output -> Iq reference (shared with PID) */
 
-SPEED_ADRC_DEF Speed_Pid;       /* ADRC controller instance (shared name with PID) */
+SPEED_PID_DEF Speed_Pid;        /* ADRC controller instance (shared name with PID) */
 
 /**
  * @brief Initialize Speed Linear ADRC Controller
@@ -108,7 +107,7 @@ void speed_adrc_initialize(void)
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp)
+void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp)
 {
     real32_T speed_ref_rad;
     real32_T e;             /* Observation error */
@@ -133,7 +132,10 @@ void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SP
     current_adrc_temp->eso.z1 += (current_adrc_temp->eso.z2 - current_adrc_temp->eso.beta1 * e) * dt;
     
     /* Update z2: acceleration estimate
-     * Incorporates control input (u) and corrects for observation error */
+     * Incorporates control input (u) and corrects for observation error
+     * Note: Uses previous sample's control output (*out_temp from last call).
+     * This is standard for discrete-time ADRC implementation where ESO runs
+     * before control law to avoid algebraic loop. */
     current_adrc_temp->eso.z2 += (current_adrc_temp->eso.z3 - current_adrc_temp->eso.beta2 * e + 
                                   current_adrc_temp->eso.b0 * (*out_temp)) * dt;
     
