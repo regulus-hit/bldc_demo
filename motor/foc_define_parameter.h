@@ -7,9 +7,16 @@
 #define MOTOR_STARTUP_CURRENT   1.0f   //电机启动电流，根据自己实际负载设置 1.0
 #define SPEED_LOOP_CLOSE_RAD_S  50.0f  //速度环切入闭环的速度  单位: rad/s
 
-//有感FOC 或 无感FOC选择，总得注释掉其中一个
-#define HALL_FOC_SELECT          //此行注释掉就不使用有感FOC运行
-//#define SENSORLESS_FOC_SELECT    //此行注释掉就使用有感FOC运行
+/*******************************************************************************
+ * FOC Sensor Mode Selection
+ * Select ONE of the following three modes:
+ * - HALL_FOC_SELECT: Pure Hall sensor feedback (no EKF)
+ * - SENSORLESS_FOC_SELECT: Pure sensorless EKF observer (no Hall sensors)
+ * - HYBRID_HALL_EKF_SELECT: Hybrid observer using Hall sensors to enhance EKF
+ ******************************************************************************/
+#define HALL_FOC_SELECT          // Pure Hall sensor mode
+//#define SENSORLESS_FOC_SELECT    // Pure sensorless EKF mode
+//#define HYBRID_HALL_EKF_SELECT   // Hybrid Hall+EKF mode (Hall enhances EKF)
 
 
 ////配套信浓电机参数配置（电阻，电感，磁链）
@@ -84,4 +91,43 @@
 #define VBUS_FILTER_ALPHA            0.1f
 #endif
 
-#endif
+/*******************************************************************************
+ * Hybrid Hall+EKF Observer Parameters
+ * Used when HYBRID_HALL_EKF_SELECT is enabled
+ ******************************************************************************/
+#ifdef HYBRID_HALL_EKF_SELECT
+/* Hall sensor measurement noise covariance (rad²)
+ * Represents uncertainty in Hall sensor position measurement
+ * Hall sensors have ~60° resolution, so variance reflects this */
+#define HYBRID_HALL_POSITION_NOISE   0.1f
+
+/* Hall sensor speed measurement noise covariance (rad²/s²)
+ * Represents uncertainty in speed calculated from Hall edge timing */
+#define HYBRID_HALL_SPEED_NOISE      10.0f
+
+/* Complementary filter weight for Hall position correction (0 to 1)
+ * Higher values trust Hall sensors more for position
+ * Lower values trust EKF prediction more
+ * Typical: 0.3 gives 70% EKF, 30% Hall for smooth operation */
+#define HYBRID_HALL_POSITION_WEIGHT  0.3f
+
+/* Complementary filter weight for Hall speed correction (0 to 1)
+ * Higher values trust Hall sensors more for speed
+ * Lower values trust EKF prediction more
+ * Typical: 0.2 gives 80% EKF, 20% Hall for smooth speed estimation */
+#define HYBRID_HALL_SPEED_WEIGHT     0.2f
+
+/* Minimum speed for Hall sensor fusion (rad/s)
+ * Below this speed, Hall timing becomes unreliable due to long periods
+ * Use pure EKF below this threshold */
+#define HYBRID_HALL_MIN_SPEED        10.0f
+
+/* Maximum Hall position error for fusion (rad)
+ * If EKF position differs from Hall by more than this, use Hall directly
+ * This handles EKF divergence scenarios
+ * Typical: PI/3 (60 degrees) - one Hall sector */
+#define HYBRID_HALL_MAX_POSITION_ERROR  1.047f  /* PI/3 radians */
+
+#endif  /* HYBRID_HALL_EKF_SELECT */
+
+#endif  /* __FOC_DEFINE_PARAMETER_H__ */

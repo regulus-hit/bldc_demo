@@ -6,6 +6,10 @@
 #include "adc.h"
 #include "UpperComputer.h"
 
+#ifdef HYBRID_HALL_EKF_SELECT
+#include "hybrid_observer.h"
+#endif
+
 #define SEND_BUFFER_SIZE 20  /* 16 bytes data + 4 bytes tail */
 uint8_t send_buffer[SEND_BUFFER_SIZE];
 volatile uint8_t dma_tx_busy = 0;
@@ -274,6 +278,77 @@ void motor_run(void)
 	/* Position and speed from Extended Kalman Filter */
 	FOC_Input.theta = FOC_Output.EKF[3] + myref;
 	FOC_Input.speed_fdk = FOC_Output.EKF[2];
+
+#endif
+
+#ifdef HYBRID_HALL_EKF_SELECT	/* Hybrid Hall+EKF observer mode */
+
+	/**
+	 * Hybrid Observer Mode: Fuse EKF estimates with Hall sensor measurements
+	 * 
+	 * Benefits:
+	 * - Smooth position/speed from EKF interpolation between Hall edges
+	 * - Robustness from Hall sensor absolute position reference
+	 * - Better performance than pure Hall (reduces quantization noise)
+	 * - Better robustness than pure EKF (Hall prevents divergence)
+	 * 
+	 * Architecture:
+	 * 1. EKF runs continuously, estimating position/speed from back-EMF
+	 * 2. Hall sensors provide periodic position snapshots (every 60°)
+	 * 3. Complementary filter fuses both measurements
+	 * 4. At low speeds: trust EKF more (Hall timing unreliable)
+	 * 5. At high speeds: use both for optimal performance
+	 * 6. On divergence: Hall takes over to re-anchor EKF
+	 */
+	
+	float fused_position, fused_speed;
+	
+	/* Update hybrid observer with both EKF and Hall measurements */
+	hybrid_observer_update(
+		FOC_Output.EKF[3] + myref,  /* EKF position estimate (rad) */
+		FOC_Output.EKF[2],           /* EKF speed estimate (rad/s) */
+		hall_angle,                  /* Hall sensor position (rad) */
+		hall_speed * MATH_2PI,       /* Hall speed converted: Hz → rad/s (mechanical * 2π) */
+		&fused_position,             /* Output: fused position */
+		&fused_speed                 /* Output: fused speed */
+	);
+	
+	/* Check if speed is high enough for closed-loop speed control */
+	if (fabsf(fused_speed) > fabsf(SPEED_LOOP_CLOSE_RAD_S))
+	{
+		/* Closed-loop speed control active */
+		FOC_Input.Id_ref = 0.0f;           /* Zero d-axis current for SPMSM */
+		Speed_Fdk = fused_speed;           /* Speed feedback from hybrid observer */
+		FOC_Input.Iq_ref = Speed_Pid_Out;  /* Iq from speed controller */
+		
+#ifdef ENABLE_FIELD_WEAKENING
+		/* Field-Weakening Control: Inject negative Id current at high speeds
+		 * This extends the speed range by weakening the rotor flux
+		 * Id_fw = -K_fw * (|speed| - base_speed) when speed > base_speed */
+		float speed_abs = fabsf(fused_speed);
+		if (speed_abs > FIELD_WEAKENING_BASE_SPEED)
+		{
+			float Id_fw = -FIELD_WEAKENING_GAIN * (speed_abs - FIELD_WEAKENING_BASE_SPEED);
+			/* Limit negative Id to prevent demagnetization */
+			if (Id_fw < FIELD_WEAKENING_MAX_NEG_ID)
+			{
+				Id_fw = FIELD_WEAKENING_MAX_NEG_ID;
+			}
+			FOC_Input.Id_ref = Id_fw;
+		}
+#endif
+	}
+	else
+	{
+		/* Open-loop startup mode */
+		FOC_Input.Id_ref = 0.0f;
+		FOC_Input.Iq_ref = Iq_ref;
+		Speed_Pid.I_Sum = Iq_ref;
+	}
+	
+	/* Position and speed from hybrid observer (fused EKF+Hall) */
+	FOC_Input.theta = fused_position;
+	FOC_Input.speed_fdk = fused_speed;
 
 #endif
 

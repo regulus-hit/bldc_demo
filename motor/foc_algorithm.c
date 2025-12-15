@@ -6,6 +6,10 @@
 #include "main.h"
 #include "foc_algorithm.h"
 
+#ifdef HYBRID_HALL_EKF_SELECT
+#include "hybrid_observer.h"
+#endif
+
 /* D-axis current PI controller parameters */
 real32_T D_PI_I = 1282.8F;
 real32_T D_PI_KB = 15.0F;
@@ -526,5 +530,10 @@ void foc_algorithm_initialize(void)
 			}
 		}
 	}
+
+#ifdef HYBRID_HALL_EKF_SELECT
+	/* Initialize hybrid Hall+EKF observer */
+	hybrid_observer_initialize();
+#endif
 }
 
