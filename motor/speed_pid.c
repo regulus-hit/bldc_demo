@@ -46,8 +46,13 @@ void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SP
 	/* Calculate error with unit conversion: Hz -> rad/s (multiply by 2*PI) */
 	error = MATH_2PI * ref_temp - fdb_temp;
 
+#ifdef COPILOT_BUGFIX
+	/* PI control law: P + I */
+	temp = (error + current_pid_temp->I_Sum) * current_pid_temp->P_Gain;
+#else
 	/* PI control law: P + I (standard form) */
 	temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
+#endif
 
 	/* Output limiting */
 	if (temp > current_pid_temp->Max_Output)

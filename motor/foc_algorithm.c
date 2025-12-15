@@ -175,9 +175,14 @@ void SVPWM_Calc(VOLTAGE_ALPHA_BETA_DEF v_alpha_beta_temp, real32_T Udc_temp, rea
 	f_temp = Tx + Ty;
 	if (f_temp > Tpwm_temp)
 	{
+#ifdef COPILOT_BUGFIX
+		Tx /= f_temp;
+		Ty /= (Tx + Ty);
+#else
 		/* Scale both vectors proportionally to fit within PWM period */
 		Tx = Tx * Tpwm_temp / f_temp;
 		Ty = Ty * Tpwm_temp / f_temp;
+#endif
 	}
 
 	/* Calculate zero vector distribution for center-aligned PWM */

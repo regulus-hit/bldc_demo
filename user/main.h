@@ -61,6 +61,8 @@
 //#define MATH_cos_30	0.866025388F
 #define MATH_cos_60		0.500F
 
+#define COPILOT_BUGFIX
+
 /* PI macro for compatibility with existing code */
 #ifndef PI
 #define PI              MATH_PI
