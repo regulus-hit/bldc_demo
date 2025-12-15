@@ -49,7 +49,7 @@ void OLED_Clear(void)
 	OLED_DC_Clr();  /* Command mode */
 	for (i = 0; i < 8; i++)
 	{
-		OLED_WR_Byte(0xb0 + i);  /* Set page address */
+		OLED_WR_Byte(0xB0 + i);  /* Set page address */
 		OLED_WR_Byte(0x00);      /* Set lower column address */
 		OLED_WR_Byte(0x10);      /* Set higher column address */
 		OLED_DC_Set();           /* Data mode */
@@ -90,15 +90,15 @@ void OLED_Init(void)
 	OLED_WR_Byte(0x10);  /* Set high column address */
 	OLED_WR_Byte(0x40);  /* Set start line address (0x00-0x3F) */
 	OLED_WR_Byte(0x81);  /* Set contrast control */
-	OLED_WR_Byte(0xff);  /* Maximum contrast */
+	OLED_WR_Byte(0xFF);  /* Maximum contrast */
 	OLED_WR_Byte(0xA1);  /* Set segment remap (A0=normal, A1=reverse) */
 	OLED_WR_Byte(0xC8);  /* Set COM output scan direction (C0=normal, C8=reverse) */
 	OLED_WR_Byte(0xA6);  /* Normal display (not inverted) */
 	OLED_WR_Byte(0xA8);  /* Set multiplex ratio */
-	OLED_WR_Byte(0x3f);  /* 1/64 duty (64 rows) */
+	OLED_WR_Byte(0x3F);  /* 1/64 duty (64 rows) */
 	OLED_WR_Byte(0xD3);  /* Set display offset */
 	OLED_WR_Byte(0x00);  /* No offset */
-	OLED_WR_Byte(0xd5);  /* Set display clock divide ratio/oscillator frequency */
+	OLED_WR_Byte(0xD5);  /* Set display clock divide ratio/oscillator frequency */
 	OLED_WR_Byte(0x80);  /* Default divide ratio, 100 frames/sec */
 	OLED_WR_Byte(0xD9);  /* Set pre-charge period */
 	OLED_WR_Byte(0xF1);  /* Pre-charge: 15 clocks, discharge: 1 clock */
@@ -138,10 +138,10 @@ void oled_display(void)
 			{
 				display_temp = 0x80000000;
 				display_temp = display_temp >> pos;
-				display_buff[3][i] = (uint8_t)((display_temp&0xff000000)>>24);
-				display_buff[2][i] = (uint8_t)((display_temp&0x00ff0000)>>16);
-				display_buff[1][i] = (uint8_t)((display_temp&0x0000ff00)>>8);
-				display_buff[0][i] = (uint8_t)(display_temp&0x000000ff);
+				display_buff[3][i] = (uint8_t)((display_temp&0xFF000000)>>24);
+				display_buff[2][i] = (uint8_t)((display_temp&0x00FF0000)>>16);
+				display_buff[1][i] = (uint8_t)((display_temp&0x0000FF00)>>8);
+				display_buff[0][i] = (uint8_t)(display_temp&0x000000FF);
 				display_buff[4][i] = 0;
 				display_buff[5][i] = 0;
 				display_buff[6][i] = 0;
@@ -153,10 +153,10 @@ void oled_display(void)
 				temp = -pos;
 				display_temp = 1;
 				display_temp = display_temp << temp;
-				display_buff[7][i] = (uint8_t)((display_temp&0xff000000)>>24);
-				display_buff[6][i] = (uint8_t)((display_temp&0x00ff0000)>>16);
-				display_buff[5][i] = (uint8_t)((display_temp&0x0000ff00)>>8);
-				display_buff[4][i] = (uint8_t)(display_temp&0x000000ff);
+				display_buff[7][i] = (uint8_t)((display_temp&0xFF000000)>>24);
+				display_buff[6][i] = (uint8_t)((display_temp&0x00FF0000)>>16);
+				display_buff[5][i] = (uint8_t)((display_temp&0x0000FF00)>>8);
+				display_buff[4][i] = (uint8_t)(display_temp&0x000000FF);
 				display_buff[0][i] = 0;
 				display_buff[1][i] = 0;
 				display_buff[2][i] = 0;
@@ -165,7 +165,7 @@ void oled_display(void)
 		}
 		for(i=0;i<8;i++)  
 		{  
-			OLED_WR_Byte (0xb0+i);    
+			OLED_WR_Byte (0xB0+i);    
 			OLED_WR_Byte (0x02);      
 			OLED_WR_Byte (0x10);     
 			OLED_DC_Set();
@@ -178,9 +178,9 @@ void oled_display(void)
 
 void OLED_Set_Pos(unsigned char x, unsigned char y) 
 { 
-	OLED_WR_Byte(0xb0+y);
-	OLED_WR_Byte((((x+2)&0xf0)>>4)|0x10);
-	OLED_WR_Byte(((x+2)&0x0f)); 
+	OLED_WR_Byte(0xB0+y);
+	OLED_WR_Byte((((x+2)&0xF0)>>4)|0x10);
+	OLED_WR_Byte(((x+2)&0x0F)); 
 } 
 /***********功能描述：显示显示BMP图片128×64起始点坐标(x,y),x的范围0～127，y为页的范围0～7*****************/
 void OLED_DrawBMP(unsigned char x0, unsigned char y0,unsigned char x1, unsigned char y1,unsigned char BMP[])
