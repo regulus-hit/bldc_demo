@@ -363,6 +363,38 @@ void foc_algorithm_step(void)
 	/* Step 4: Inverse Park Transform - Convert voltage commands to stationary frame */
 	Rev_Park_Transf(Voltage_DQ, Transf_Cos_Sin, &Voltage_Alpha_Beta);
 
+#ifdef ENABLE_DEADTIME_COMPENSATION
+	/**
+	 * Step 5: Dead-Time Compensation
+	 * Compensates for voltage error due to gate driver dead-time
+	 * Formula: V_comp = sign(I) * V_dead * gain
+	 * This improves low-speed torque and reduces current distortion
+	 */
+	{
+		float V_comp_alpha, V_comp_beta;
+		
+		/* Calculate compensation voltage based on current direction
+		 * sign(I_alpha) * dead-time compensation voltage */
+		if (Current_Ialpha_beta.Ialpha > 0.01f)
+			V_comp_alpha = DEADTIME_COMPENSATION_GAIN;
+		else if (Current_Ialpha_beta.Ialpha < -0.01f)
+			V_comp_alpha = -DEADTIME_COMPENSATION_GAIN;
+		else
+			V_comp_alpha = 0.0f;
+		
+		if (Current_Ialpha_beta.Ibeta > 0.01f)
+			V_comp_beta = DEADTIME_COMPENSATION_GAIN;
+		else if (Current_Ialpha_beta.Ibeta < -0.01f)
+			V_comp_beta = -DEADTIME_COMPENSATION_GAIN;
+		else
+			V_comp_beta = 0.0f;
+		
+		/* Apply compensation to voltage commands */
+		Voltage_Alpha_Beta.Valpha += V_comp_alpha;
+		Voltage_Alpha_Beta.Vbeta += V_comp_beta;
+	}
+#endif
+
 	/**
 	 * Step 6: Extended Kalman Filter (EKF) State Observer
 	 * Estimates rotor position and speed for sensorless control
