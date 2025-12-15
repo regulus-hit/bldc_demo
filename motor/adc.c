@@ -5,9 +5,17 @@
 #include "main.h"
 #include "adc.h"
 #include "UpperComputer.h"
+#include "foc_define_parameter.h"
 
 #ifdef HYBRID_HALL_EKF_SELECT
 #include "hybrid_observer.h"
+#endif
+
+/* Include appropriate speed controller based on configuration */
+#ifdef USE_SPEED_ADRC
+#include "speed_adrc.h"
+#else
+#include "speed_pid.h"
 #endif
 
 #define SEND_BUFFER_SIZE 20  /* 16 bytes data + 4 bytes tail */
@@ -195,7 +203,12 @@ void motor_run(void)
 			}
 		}
 	}
+	/* Store speed reference for debugging/telemetry */
+#ifdef USE_SPEED_ADRC
+	float_test3 = Speed_Ref_ADRC * 2.0f * PI;
+#else
 	float_test3 = Speed_Ref * 2.0f * PI;
+#endif
 
 	/**
 	 * Sensor mode selection for BLDC motor control:
@@ -211,8 +224,15 @@ void motor_run(void)
 	{
 		/* Closed-loop speed control active */
 		FOC_Input.Id_ref = 0.0f;				/* Zero d-axis current for maximum torque/amp */
-		Speed_Fdk = hall_speed * 2.0f * PI;		/* Speed feedback from Hall sensors */
-		FOC_Input.Iq_ref = Speed_Pid_Out;		/* Iq from speed controller */
+		
+		/* Update speed feedback for controller */
+#ifdef USE_SPEED_ADRC
+		Speed_Fdk_ADRC = hall_speed * 2.0f * PI;	/* Speed feedback from Hall sensors */
+		FOC_Input.Iq_ref = Speed_Adrc_Out;			/* Iq from ADRC speed controller */
+#else
+		Speed_Fdk = hall_speed * 2.0f * PI;			/* Speed feedback from Hall sensors */
+		FOC_Input.Iq_ref = Speed_Pid_Out;			/* Iq from PID speed controller */
+#endif
 		
 #ifdef ENABLE_FIELD_WEAKENING
 		/* Field-Weakening Control: Inject negative Id current at high speeds
@@ -257,8 +277,15 @@ void motor_run(void)
 	{
 		/* Closed-loop speed control active */
 		FOC_Input.Id_ref = 0.0f;			/* Zero d-axis current for SPMSM */
-		Speed_Fdk = FOC_Output.EKF[2];		/* Speed from EKF observer */
-		FOC_Input.Iq_ref = Speed_Pid_Out;	/* Iq from speed controller */
+		
+		/* Update speed feedback for controller */
+#ifdef USE_SPEED_ADRC
+		Speed_Fdk_ADRC = FOC_Output.EKF[2];		/* Speed from EKF observer */
+		FOC_Input.Iq_ref = Speed_Adrc_Out;		/* Iq from ADRC speed controller */
+#else
+		Speed_Fdk = FOC_Output.EKF[2];			/* Speed from EKF observer */
+		FOC_Input.Iq_ref = Speed_Pid_Out;		/* Iq from PID speed controller */
+#endif
 		
 #ifdef ENABLE_FIELD_WEAKENING
 		/* Field-Weakening Control: Inject negative Id current at high speeds
@@ -328,8 +355,15 @@ void motor_run(void)
 	{
 		/* Closed-loop speed control active */
 		FOC_Input.Id_ref = 0.0f;           /* Zero d-axis current for SPMSM */
-		Speed_Fdk = fused_speed;           /* Speed feedback from hybrid observer */
-		FOC_Input.Iq_ref = Speed_Pid_Out;  /* Iq from speed controller */
+		
+		/* Update speed feedback for controller */
+#ifdef USE_SPEED_ADRC
+		Speed_Fdk_ADRC = fused_speed;          /* Speed feedback from hybrid observer */
+		FOC_Input.Iq_ref = Speed_Adrc_Out;     /* Iq from ADRC speed controller */
+#else
+		Speed_Fdk = fused_speed;               /* Speed feedback from hybrid observer */
+		FOC_Input.Iq_ref = Speed_Pid_Out;      /* Iq from PID speed controller */
+#endif
 		
 #ifdef ENABLE_FIELD_WEAKENING
 		/* Field-Weakening Control: Inject negative Id current at high speeds
