@@ -352,9 +352,7 @@ void stm32_ekf_Start_wrapper(real_T *xD)
  * @param y Output vector: [i_alpha, i_beta, omega, theta]
  * @param xD Discrete state vector containing EKF estimates
  */
-void stm32_ekf_Outputs_wrapper(const real32_T *u,
-                                real32_T *y,
-                                const real_T *xD)
+void stm32_ekf_Outputs_wrapper(const real32_T *u, real32_T *y, const real_T *xD)
 {
 	y[0] = xD[0];  /* Estimated current alpha */
 	y[1] = xD[1];  /* Estimated current beta */
@@ -379,9 +377,7 @@ void stm32_ekf_Outputs_wrapper(const real32_T *u,
  * @param y Output estimates (updated by Outputs_wrapper)
  * @param xD Discrete state vector (updated in-place)
  */
-void stm32_ekf_Update_wrapper(const real32_T *u,
-                               real32_T *y,
-                               real_T *xD)
+void stm32_ekf_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD)
 {
 	/* Extract inputs from input vector */
 	vs_ab_0_0 = u[0];  /* Alpha-axis voltage */
@@ -694,9 +690,9 @@ void stm32_ekf_Update_wrapper(const real32_T *u,
 		tempa_3_0 -= (2.0f * PI);
 	}
 #else
-	if (tempa_3_0 > (6.2831853f))  /* 2*PI approximation */
+	if (tempa_3_0 > (MATH_2PI))  /* 2*PI approximation */
 	{
-		tempa_3_0 -= (6.2831853f);
+		tempa_3_0 -= (MATH_2PI);
 	}
 #endif
 
