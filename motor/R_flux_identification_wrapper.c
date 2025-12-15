@@ -12,6 +12,14 @@
 
 #include <math.h>
 
+/* RLS Algorithm Configuration Parameters */
+#define RLS_INITIAL_RESISTANCE          0.05f    /* Initial Rs estimate (Ohms): 50 mΩ typical for small PMSM */
+#define RLS_INITIAL_FLUX_LINKAGE        0.01f    /* Initial flux linkage estimate (Wb): 10 mWb typical for small PM motors */
+#define RLS_INITIAL_COVARIANCE_BASE     0.0008f  /* Base covariance value for initialization */
+#define RLS_COVARIANCE_SCALE_DIAGONAL   2.0f     /* Scale factor for diagonal covariance elements (fast adaptation) */
+#define RLS_COVARIANCE_SCALE_OFFDIAG    0.0f     /* Scale factor for off-diagonal elements (uncorrelated assumption) */
+#define RLS_FORGETTING_FACTOR           0.999f   /* Forgetting factor: 0.999 allows slow parameter drift tracking */
+
 /* RLS algorithm variables for 2-parameter identification (Rs and flux) */
 float theta0_1_1;   /* Parameter estimate: Resistance Rs (previous) */
 float theta0_2_1;   /* Parameter estimate: Flux linkage (previous) */
@@ -74,14 +82,14 @@ float r_Uq;         /* Input: measured q-axis voltage */
 void R_flux_identification_Start_wrapper(real_T *xD)
 {
 	/* Initial parameter estimates */
-	theta0_1_1 = 0.05f;  /* Initial resistance: 50 mΩ */
-	theta0_2_1 = 0.01f;  /* Initial flux linkage: 10 mWb */
+	theta0_1_1 = RLS_INITIAL_RESISTANCE;   /* Initial resistance: 50 mΩ */
+	theta0_2_1 = RLS_INITIAL_FLUX_LINKAGE; /* Initial flux linkage: 10 mWb */
 
 	/* Initial covariance matrix (2x2, large diagonal for fast adaptation) */
-	Pn0_1_1 = 0.0008f * 2.0f;  /* Variance for Rs */
-	Pn0_1_2 = 0.0008f * 0.0f;  /* Covariance Rs-flux (uncorrelated) */
-	Pn0_2_1 = 0.0008f * 0.0f;  /* Covariance flux-Rs (uncorrelated) */
-	Pn0_2_2 = 0.0008f * 2.0f;  /* Variance for flux */
+	Pn0_1_1 = RLS_INITIAL_COVARIANCE_BASE * RLS_COVARIANCE_SCALE_DIAGONAL; /* Variance for Rs */
+	Pn0_1_2 = RLS_INITIAL_COVARIANCE_BASE * RLS_COVARIANCE_SCALE_OFFDIAG;  /* Covariance Rs-flux (uncorrelated) */
+	Pn0_2_1 = RLS_INITIAL_COVARIANCE_BASE * RLS_COVARIANCE_SCALE_OFFDIAG;  /* Covariance flux-Rs (uncorrelated) */
+	Pn0_2_2 = RLS_INITIAL_COVARIANCE_BASE * RLS_COVARIANCE_SCALE_DIAGONAL; /* Variance for flux */
 
 	/* Initialize state variables */
 	x_1_1 = theta0_1_1;  /* Rs estimate */
@@ -211,8 +219,8 @@ void R_flux_identification_Update_wrapper(const real32_T *u, real32_T *y, real_T
 	 * predicted = h[1]*Rs + h[2]*flux
 	 * Forgetting factor 0.999 in prediction for parameter drift tracking
 	 */
-	theta1_1_1 = theta0_1_1 + r_K_1_1 * (r_Uq - (h_1_1 * theta0_1_1 * 0.999f + h_2_1 * theta0_2_1 * 0.999f));
-	theta1_2_1 = theta0_2_1 + r_K_2_1 * (r_Uq - (h_1_1 * theta0_1_1 * 0.999f + h_2_1 * theta0_2_1 * 0.999f));
+	theta1_1_1 = theta0_1_1 + r_K_1_1 * (r_Uq - (h_1_1 * theta0_1_1 * RLS_FORGETTING_FACTOR + h_2_1 * theta0_2_1 * RLS_FORGETTING_FACTOR));
+	theta1_2_1 = theta0_2_1 + r_K_2_1 * (r_Uq - (h_1_1 * theta0_1_1 * RLS_FORGETTING_FACTOR + h_2_1 * theta0_2_1 * RLS_FORGETTING_FACTOR));
 
 	/* Store updated states for next iteration */
 	x_1_1 = theta1_1_1;  /* Updated Rs estimate */

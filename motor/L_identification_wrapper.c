@@ -12,6 +12,12 @@
 
 #include <math.h>
 
+/* RLS Algorithm Configuration Parameters for Inductance Identification */
+#define RLS_L_INITIAL_INDUCTANCE        0.01f    /* Initial Ls estimate (H): 10 mH typical for small PMSM */
+#define RLS_L_INITIAL_COVARIANCE_BASE   0.0008f  /* Base covariance value for initialization */
+#define RLS_L_COVARIANCE_SCALE          2.0f     /* Scale factor for covariance (fast adaptation) */
+#define RLS_L_FORGETTING_FACTOR         0.99f    /* Forgetting factor: 0.99 allows parameter drift tracking */
+
 /* RLS algorithm variables for inductance identification */
 float l_h;        /* Observation coefficient */
 float l_Pn0;      /* Covariance matrix element (previous) */
@@ -40,8 +46,8 @@ float l_Ud;       /* Input: measured voltage */
  */
 void L_identification_Start_wrapper(real_T *xD)
 {
-	l_theta0 = 0.01f;           /* Initial inductance estimate: 10 mH */
-	l_Pn0 = 0.0008f * 2.0f;     /* Initial covariance (large for fast adaptation) */
+	l_theta0 = RLS_L_INITIAL_INDUCTANCE;                                /* Initial inductance estimate: 10 mH */
+	l_Pn0 = RLS_L_INITIAL_COVARIANCE_BASE * RLS_L_COVARIANCE_SCALE;    /* Initial covariance (large for fast adaptation) */
 
 	l_x1 = l_theta0;  /* Initialize state with initial estimate */
 	l_x2 = l_Pn0;     /* Initialize covariance state */
@@ -94,7 +100,7 @@ void L_identification_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD)
 	/* Update parameter estimate */
 	l_theta0 = l_x1;  /* Get previous estimate */
 	l_Ud = u[1];      /* Get measured voltage */
-	l_theta1 = l_theta0 + l_K * (l_Ud - l_h * 0.99f * l_theta0);  /* RLS update with forgetting factor */
+	l_theta1 = l_theta0 + l_K * (l_Ud - l_h * RLS_L_FORGETTING_FACTOR * l_theta0);  /* RLS update with forgetting factor */
 	
 	/* Store updated states */
 	l_x1 = l_theta1;  /* Store new estimate */
