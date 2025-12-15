@@ -157,7 +157,7 @@ The auto-tuning process follows a state machine with the following states:
 - **Entry Condition:** Gains calculated
 - **Actions:**
   - Update D-axis PI gains
-  - Update Q-axis PI gains (same as D-axis for SPMSM)
+  - Update Q-axis PI gains (same as D-axis for typical BLDC/SPMSM)
   - Wait for settling (500 ms)
 - **Exit Condition:** Settling time complete → success
 
@@ -174,6 +174,32 @@ The auto-tuning process follows a state machine with the following states:
   - Convergence failure
 - **Actions:** Restore original gains (rollback)
 - **Result:** System reverts to pre-tune gains
+
+---
+
+## Motor Type Considerations
+
+### D-axis and Q-axis Inductance
+
+The current implementation assumes **Ld = Lq** (d-axis inductance equals q-axis inductance), which is appropriate for:
+
+1. **BLDC Motors** (trapezoidal back-EMF)
+   - Typically use surface-mounted permanent magnets
+   - Ld ≈ Lq due to symmetric magnetic structure
+   - **This is the primary target for this firmware**
+
+2. **Surface-Mounted PMSM (SPMSM)** (sinusoidal back-EMF)
+   - Magnets mounted on rotor surface
+   - Non-salient pole design (no magnetic asymmetry)
+   - Ld = Lq (equal inductance in both axes)
+
+**Note for Interior PMSMs (IPMSM):**
+- Interior permanent magnet motors have **Ld ≠ Lq** (typically Ld < Lq)
+- Magnets embedded inside rotor create salient pole effect
+- Different magnetic paths for d-axis (through magnets) and q-axis (through iron)
+- For IPMSMs, this auto-tuning feature should be **disabled** and D/Q axes tuned independently
+
+The auto-tune applies the same calculated gains to both D-axis and Q-axis controllers, which is correct for typical BLDC motors and SPMSM but may not be optimal for IPMSM applications.
 
 ---
 

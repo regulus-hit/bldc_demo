@@ -462,13 +462,19 @@ void foc_algorithm_step(void)
 #ifdef ENABLE_PID_AUTOTUNE
 	/* Step 9: PID Auto-Tuning - Automatically optimize current loop gains */
 	/* Uses identified R and L to calculate optimal Kp, Ki, Kb */
-	/* Note: Auto-tune for D-axis and Q-axis separately if needed */
-	/* For now, we tune both axes with same gains (typical for SPMSM) */
+	/* 
+	 * Note on D-axis and Q-axis tuning:
+	 * - For typical BLDC motors (surface-mounted magnets): Ld = Lq, use same gains
+	 * - For Surface-Mounted PMSM (SPMSM): Ld = Lq, use same gains
+	 * - For Interior PMSMs (IPMSM): Ld ≠ Lq, may need different gains
+	 * 
+	 * Current implementation assumes Ld = Lq (typical for BLDC and SPMSM).
+	 * For IPMSM applications, disable this feature and tune D/Q independently.
+	 */
 	pid_autotune_step(FOC_Output.L_RF[1], FOC_Output.L_RF[0],
 	                  &D_PI_P, &D_PI_I, &D_PI_KB);
 	
-	/* Apply same gains to Q-axis (symmetric for SPMSM) */
-	/* For Surface-Mounted PMSM, Ld = Lq, so D and Q axes use same gains */
+	/* Apply same gains to Q-axis (typical for BLDC/SPMSM with Ld = Lq) */
 	if (pid_autotune_is_complete()) {
 		Q_PI_P = D_PI_P;
 		Q_PI_I = D_PI_I;
