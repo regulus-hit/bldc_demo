@@ -22,172 +22,257 @@ float Rs;    /* Stator resistance (Ohms) */
 float Ls;    /* Stator inductance (Henries) */
 float flux;  /* Permanent magnet flux linkage (Wb) */
 
-float Q_0_0;
-//float Q_0_1;
-//float Q_0_2;
-//float Q_0_3;
-//float Q_1_0;
-float Q_1_1;
-//float Q_1_2;
-//float Q_1_3;
-//float Q_2_0;
-//float Q_2_1;
-float Q_2_2;
-//float Q_2_3;
-//float Q_3_0;
-//float Q_3_1;
-//float Q_3_2;
-float Q_3_3;
+/* 
+ * Process noise covariance matrix Q (4x4, diagonal only)
+ * Models uncertainty in state dynamics (how much states can randomly change)
+ * Only diagonal elements stored (off-diagonal assumed zero = uncorrelated noise)
+ */
+float Q_0_0;  /* Q[0,0]: i_alpha process noise variance (A²) */
+/* float Q_0_1; */  /* Q[0,1]: Covariance between i_alpha and i_beta noise (assumed zero) */
+/* float Q_0_2; */  /* Q[0,2]: Covariance between i_alpha and omega noise (assumed zero) */
+/* float Q_0_3; */  /* Q[0,3]: Covariance between i_alpha and theta noise (assumed zero) */
+/* float Q_1_0; */  /* Q[1,0]: Covariance between i_beta and i_alpha noise (assumed zero) */
+float Q_1_1;  /* Q[1,1]: i_beta process noise variance (A²) */
+/* float Q_1_2; */  /* Q[1,2]: Covariance between i_beta and omega noise (assumed zero) */
+/* float Q_1_3; */  /* Q[1,3]: Covariance between i_beta and theta noise (assumed zero) */
+/* float Q_2_0; */  /* Q[2,0]: Covariance between omega and i_alpha noise (assumed zero) */
+/* float Q_2_1; */  /* Q[2,1]: Covariance between omega and i_beta noise (assumed zero) */
+float Q_2_2;  /* Q[2,2]: omega process noise variance (rad²/s²) */
+/* float Q_2_3; */  /* Q[2,3]: Covariance between omega and theta noise (assumed zero) */
+/* float Q_3_0; */  /* Q[3,0]: Covariance between theta and i_alpha noise (assumed zero) */
+/* float Q_3_1; */  /* Q[3,1]: Covariance between theta and i_beta noise (assumed zero) */
+/* float Q_3_2; */  /* Q[3,2]: Covariance between theta and omega noise (assumed zero) */
+float Q_3_3;  /* Q[3,3]: theta process noise variance (rad²) */
 
-float R_0_0;
-//float R_0_1;
-//float R_1_0;
-float R_1_1;
-float T;
+/* 
+ * Measurement noise covariance matrix R (2x2, diagonal only)
+ * Models sensor noise/uncertainty in current measurements
+ */
+float R_0_0;  /* R[0,0]: i_alpha measurement noise variance (A²) */
+/* float R_0_1; */  /* R[0,1]: Covariance between i_alpha and i_beta sensor noise (assumed zero) */
+/* float R_1_0; */  /* R[1,0]: Covariance between i_beta and i_alpha sensor noise (assumed zero) */
+float R_1_1;  /* R[1,1]: i_beta measurement noise variance (A²) */
 
-float vs_ab_0_0;
-float vs_ab_1_0;
-float is_ab_0_0;
-float is_ab_1_0;
+float T;  /* Sample time period (seconds) */
 
-float P0_0_0;
-float P0_0_1;
-float P0_0_2;
-float P0_0_3;
-float P0_1_0;
-float P0_1_1;
-float P0_1_2;
-float P0_1_3;
-float P0_2_0;
-float P0_2_1;
-float P0_2_2;
-float P0_2_3;
-float P0_3_0;
-float P0_3_1;
-float P0_3_2;
-float P0_3_3;
+/* 
+ * Input/measurement vectors in alpha-beta stationary reference frame
+ * Format: X_row_col (single column vectors, so col is always 0)
+ */
+float vs_ab_0_0;  /* Applied voltage in alpha-axis (V) - Input u[0] */
+float vs_ab_1_0;  /* Applied voltage in beta-axis (V) - Input u[1] */
+float is_ab_0_0;  /* Measured current in alpha-axis (A) - Measurement y[0] */
+float is_ab_1_0;  /* Measured current in beta-axis (A) - Measurement y[1] */
 
-float H_0_0;
-//float H_0_1;
-//float H_0_2;
-//float H_0_3;
-//float H_1_0;
-float H_1_1;
-//float H_1_2;
-//float H_1_3;
+/* 
+ * State estimation error covariance matrix P0 (4x4, full matrix)
+ * Represents uncertainty in state estimates [i_alpha, i_beta, omega, theta]
+ * Updated each iteration: predicted then corrected
+ * Format: P0_row_col
+ */
+float P0_0_0;  /* P0[0,0]: i_alpha variance (A²) */
+float P0_0_1;  /* P0[0,1]: Covariance between i_alpha and i_beta */
+float P0_0_2;  /* P0[0,2]: Covariance between i_alpha and omega */
+float P0_0_3;  /* P0[0,3]: Covariance between i_alpha and theta */
+float P0_1_0;  /* P0[1,0]: Covariance between i_beta and i_alpha */
+float P0_1_1;  /* P0[1,1]: i_beta variance (A²) */
+float P0_1_2;  /* P0[1,2]: Covariance between i_beta and omega */
+float P0_1_3;  /* P0[1,3]: Covariance between i_beta and theta */
+float P0_2_0;  /* P0[2,0]: Covariance between omega and i_alpha */
+float P0_2_1;  /* P0[2,1]: Covariance between omega and i_beta */
+float P0_2_2;  /* P0[2,2]: omega variance (rad²/s²) */
+float P0_2_3;  /* P0[2,3]: Covariance between omega and theta */
+float P0_3_0;  /* P0[3,0]: Covariance between theta and i_alpha */
+float P0_3_1;  /* P0[3,1]: Covariance between theta and i_beta */
+float P0_3_2;  /* P0[3,2]: Covariance between theta and omega */
+float P0_3_3;  /* P0[3,3]: theta variance (rad²) */
 
-float B_0_0;
-//float B_0_1;
-//float B_1_0;
-float B_1_1;
-//float B_2_0;
-//float B_2_1;
-//float B_3_0;
-//float B_3_1;
+/* 
+ * Observation/measurement matrix H (2x4, diagonal only)
+ * Maps state space [i_alpha, i_beta, omega, theta] to measurements [i_alpha, i_beta]
+ * We directly measure currents, so H is identity for currents, zero for speed/position
+ */
+float H_0_0;  /* H[0,0]: Measurement sensitivity of y[0] to i_alpha (always 1.0) */
+/* float H_0_1; */  /* H[0,1]: Measurement sensitivity of y[0] to i_beta (zero - we don't measure i_beta when measuring i_alpha) */
+/* float H_0_2; */  /* H[0,2]: Measurement sensitivity of y[0] to omega (zero - can't directly measure speed from current sensor) */
+/* float H_0_3; */  /* H[0,3]: Measurement sensitivity of y[0] to theta (zero - can't directly measure position from current sensor) */
+/* float H_1_0; */  /* H[1,0]: Measurement sensitivity of y[1] to i_alpha (zero - we don't measure i_alpha when measuring i_beta) */
+float H_1_1;  /* H[1,1]: Measurement sensitivity of y[1] to i_beta (always 1.0) */
+/* float H_1_2; */  /* H[1,2]: Measurement sensitivity of y[1] to omega (zero - can't directly measure speed from current sensor) */
+/* float H_1_3; */  /* H[1,3]: Measurement sensitivity of y[1] to theta (zero - can't directly measure position from current sensor) */
 
-float F_0_0;
-//float F_0_1;
-float F_0_2;
-float F_0_3;
-//float F_1_0;
-float F_1_1;
-float F_1_2;
-float F_1_3;
-//float F_2_0;
-//float F_2_1;
-//float F_2_2;
-//float F_2_3;
-//float F_3_0;
-//float F_3_1;
-float F_3_2;
-//float F_3_3;
+/* 
+ * Input matrix B (4x2, diagonal only)
+ * Maps control inputs [v_alpha, v_beta] to state derivatives
+ * Voltages affect current rates (di/dt), but not directly speed/position
+ */
+float B_0_0;  /* B[0,0]: Effect of v_alpha on di_alpha/dt (1/Ls) */
+/* float B_0_1; */  /* B[0,1]: Effect of v_beta on di_alpha/dt (zero - alpha and beta decoupled in stationary frame) */
+/* float B_1_0; */  /* B[1,0]: Effect of v_alpha on di_beta/dt (zero - alpha and beta decoupled in stationary frame) */
+float B_1_1;  /* B[1,1]: Effect of v_beta on di_beta/dt (1/Ls) */
+/* float B_2_0; */  /* B[2,0]: Effect of v_alpha on domega/dt (zero - voltage doesn't directly change speed) */
+/* float B_2_1; */  /* B[2,1]: Effect of v_beta on domega/dt (zero - voltage doesn't directly change speed) */
+/* float B_3_0; */  /* B[3,0]: Effect of v_alpha on dtheta/dt (zero - voltage doesn't directly change position) */
+/* float B_3_1; */  /* B[3,1]: Effect of v_beta on dtheta/dt (zero - voltage doesn't directly change position) */
 
-float temp_0_0;
-float temp_0_1;
-float temp_0_2;
-float temp_0_3;
-float temp_1_0;
-float temp_1_1;
-float temp_1_2;
-float temp_1_3;
-float temp_2_0;
-float temp_2_1;
-float temp_2_2;
-float temp_2_3;
-float temp_3_0;
-float temp_3_1;
-float temp_3_2;
-float temp_3_3;
+/* 
+ * State transition Jacobian matrix F (4x4, sparse)
+ * F = ∂f/∂x where f is the nonlinear state dynamics
+ * Linearizes dynamics around current operating point for EKF
+ * Only non-zero elements computed (optimization)
+ */
+float F_0_0;  /* F[0,0]: ∂(di_alpha/dt)/∂i_alpha = -Rs/Ls (resistive damping) */
+/* float F_0_1; */  /* F[0,1]: ∂(di_alpha/dt)/∂i_beta = 0 (decoupled in stationary frame) */
+float F_0_2;  /* F[0,2]: ∂(di_alpha/dt)/∂omega = flux/Ls*sin(theta) (back-EMF speed coupling) */
+float F_0_3;  /* F[0,3]: ∂(di_alpha/dt)/∂theta = flux/Ls*omega*cos(theta) (back-EMF position coupling) */
+/* float F_1_0; */  /* F[1,0]: ∂(di_beta/dt)/∂i_alpha = 0 (decoupled in stationary frame) */
+float F_1_1;  /* F[1,1]: ∂(di_beta/dt)/∂i_beta = -Rs/Ls (resistive damping) */
+float F_1_2;  /* F[1,2]: ∂(di_beta/dt)/∂omega = -flux/Ls*cos(theta) (back-EMF speed coupling) */
+float F_1_3;  /* F[1,3]: ∂(di_beta/dt)/∂theta = flux/Ls*omega*sin(theta) (back-EMF position coupling) */
+/* float F_2_0; */  /* F[2,0]: ∂(domega/dt)/∂i_alpha = 0 (no acceleration model, constant velocity assumption) */
+/* float F_2_1; */  /* F[2,1]: ∂(domega/dt)/∂i_beta = 0 (no acceleration model) */
+/* float F_2_2; */  /* F[2,2]: ∂(domega/dt)/∂omega = 0 (no acceleration model) */
+/* float F_2_3; */  /* F[2,3]: ∂(domega/dt)/∂theta = 0 (no acceleration model) */
+/* float F_3_0; */  /* F[3,0]: ∂(dtheta/dt)/∂i_alpha = 0 (position doesn't depend on current) */
+/* float F_3_1; */  /* F[3,1]: ∂(dtheta/dt)/∂i_beta = 0 (position doesn't depend on current) */
+float F_3_2;  /* F[3,2]: ∂(dtheta/dt)/∂omega = 1.0 (position derivative is speed) */
+/* float F_3_3; */  /* F[3,3]: ∂(dtheta/dt)/∂theta = 0 (position rate doesn't depend on position itself) */
 
-float f1_0_0;
-float f1_1_0;
-float f1_2_0;
-float f1_3_0;
+/* 
+ * Temporary matrix storage (4x4)
+ * Reused for multiple intermediate calculations:
+ * - Identity matrix I
+ * - Matrix products in covariance updates
+ * - K*H product in correction step
+ */
+float temp_0_0;  /* temp[0,0] */
+float temp_0_1;  /* temp[0,1] */
+float temp_0_2;  /* temp[0,2] */
+float temp_0_3;  /* temp[0,3] */
+float temp_1_0;  /* temp[1,0] */
+float temp_1_1;  /* temp[1,1] */
+float temp_1_2;  /* temp[1,2] */
+float temp_1_3;  /* temp[1,3] */
+float temp_2_0;  /* temp[2,0] */
+float temp_2_1;  /* temp[2,1] */
+float temp_2_2;  /* temp[2,2] */
+float temp_2_3;  /* temp[2,3] */
+float temp_3_0;  /* temp[3,0] */
+float temp_3_1;  /* temp[3,1] */
+float temp_3_2;  /* temp[3,2] */
+float temp_3_3;  /* temp[3,3] */
 
-float f2_0_0;
-//float f2_0_1;
-float f2_0_2;
-float f2_0_3;
-//float f2_1_0;
-float f2_1_1;
-float f2_1_2;
-float f2_1_3;
-//float f2_2_0;
-//float f2_2_1;
-float f2_2_2;
-//float f2_2_3;
-//float f2_3_0;
-//float f2_3_1;
-float f2_3_2;
-float f2_3_3;
+/* 
+ * Nonlinear state dynamics vector f1 = f(x,u) (4x1)
+ * Continuous-time state derivatives computed from current state
+ */
+float f1_0_0;  /* f1[0]: di_alpha/dt = -Rs/Ls*i_alpha + flux/Ls*omega*sin(theta) + B*v_alpha */
+float f1_1_0;  /* f1[1]: di_beta/dt = -Rs/Ls*i_beta - flux/Ls*omega*cos(theta) + B*v_beta */
+float f1_2_0;  /* f1[2]: domega/dt = 0 (constant velocity model, no acceleration) */
+float f1_3_0;  /* f1[3]: dtheta/dt = omega (position rate equals speed) */
 
-float X_pred_0_0;
-float X_pred_1_0;
-float X_pred_2_0;
-float X_pred_3_0;
+/* 
+ * Discrete state transition matrix f2 = I + T*F (4x4, sparse)
+ * First-order discretization of continuous Jacobian F
+ * Used for propagating covariance: P_pred = f2 * P * f2^T + Q
+ */
+float f2_0_0;  /* f2[0,0] = 1 + T*F[0,0] (discrete current-to-current coupling with damping) */
+/* float f2_0_1; */  /* f2[0,1] = 0 + T*F[0,1] = 0 (no i_beta to i_alpha coupling) */
+float f2_0_2;  /* f2[0,2] = 0 + T*F[0,2] (discrete speed to i_alpha coupling via back-EMF) */
+float f2_0_3;  /* f2[0,3] = 0 + T*F[0,3] (discrete position to i_alpha coupling via back-EMF) */
+/* float f2_1_0; */  /* f2[1,0] = 0 + T*F[1,0] = 0 (no i_alpha to i_beta coupling) */
+float f2_1_1;  /* f2[1,1] = 1 + T*F[1,1] (discrete current-to-current coupling with damping) */
+float f2_1_2;  /* f2[1,2] = 0 + T*F[1,2] (discrete speed to i_beta coupling via back-EMF) */
+float f2_1_3;  /* f2[1,3] = 0 + T*F[1,3] (discrete position to i_beta coupling via back-EMF) */
+/* float f2_2_0; */  /* f2[2,0] = 0 + T*F[2,0] = 0 (no current to speed coupling in this model) */
+/* float f2_2_1; */  /* f2[2,1] = 0 + T*F[2,1] = 0 (no current to speed coupling in this model) */
+float f2_2_2;  /* f2[2,2] = 1 + T*F[2,2] = 1 (speed persists, no damping in constant velocity model) */
+/* float f2_2_3; */  /* f2[2,3] = 0 + T*F[2,3] = 0 (position doesn't affect speed in this model) */
+/* float f2_3_0; */  /* f2[3,0] = 0 + T*F[3,0] = 0 (current doesn't affect position directly) */
+/* float f2_3_1; */  /* f2[3,1] = 0 + T*F[3,1] = 0 (current doesn't affect position directly) */
+float f2_3_2;  /* f2[3,2] = 0 + T*F[3,2] = T*1 = T (position changes by speed*time) */
+float f2_3_3;  /* f2[3,3] = 1 + T*F[3,3] = 1 (position persists from previous value) */
 
-float Y_pred_0_0;
-float Y_pred_1_0;
+/* 
+ * Predicted state vector X_pred (4x1)
+ * A priori state estimate before measurement correction
+ */
+float X_pred_0_0;  /* X_pred[0]: Predicted i_alpha (A) */
+float X_pred_1_0;  /* X_pred[1]: Predicted i_beta (A) */
+float X_pred_2_0;  /* X_pred[2]: Predicted omega (rad/s) */
+float X_pred_3_0;  /* X_pred[3]: Predicted theta (rad) */
 
-float Y_0_0;
-float Y_1_0;
+/* 
+ * Predicted measurement vector Y_pred (2x1)
+ * Expected sensor readings based on predicted state: Y_pred = H * X_pred
+ */
+float Y_pred_0_0;  /* Y_pred[0]: Predicted i_alpha measurement (A) */
+float Y_pred_1_0;  /* Y_pred[1]: Predicted i_beta measurement (A) */
 
-float P_pred_0_0;
-float P_pred_0_1;
-float P_pred_0_2;
-float P_pred_0_3;    
-float P_pred_1_0;
-float P_pred_1_1;
-float P_pred_1_2;
-float P_pred_1_3;  
-float P_pred_2_0;
-float P_pred_2_1;
-float P_pred_2_2;
-float P_pred_2_3;
-float P_pred_3_0;
-float P_pred_3_1;
-float P_pred_3_2;
-float P_pred_3_3;
+/* 
+ * Actual measurement vector Y (2x1)
+ * Real sensor readings from ADC
+ */
+float Y_0_0;  /* Y[0]: Measured i_alpha from ADC (A) */
+float Y_1_0;  /* Y[1]: Measured i_beta from ADC (A) */
 
-float temp_0_0_t;
-float temp_0_1_t;
-float temp_1_0_t;
-float temp_1_1_t;
-float temp;
+/* 
+ * Predicted covariance matrix P_pred (4x4, full matrix)
+ * A priori estimation error covariance: P_pred = F * P0 * F^T + Q
+ * Represents uncertainty before incorporating measurements
+ */
+float P_pred_0_0;  /* P_pred[0,0]: Predicted i_alpha variance */
+float P_pred_0_1;  /* P_pred[0,1]: Predicted covariance i_alpha-i_beta */
+float P_pred_0_2;  /* P_pred[0,2]: Predicted covariance i_alpha-omega */
+float P_pred_0_3;  /* P_pred[0,3]: Predicted covariance i_alpha-theta */
+float P_pred_1_0;  /* P_pred[1,0]: Predicted covariance i_beta-i_alpha */
+float P_pred_1_1;  /* P_pred[1,1]: Predicted i_beta variance */
+float P_pred_1_2;  /* P_pred[1,2]: Predicted covariance i_beta-omega */
+float P_pred_1_3;  /* P_pred[1,3]: Predicted covariance i_beta-theta */
+float P_pred_2_0;  /* P_pred[2,0]: Predicted covariance omega-i_alpha */
+float P_pred_2_1;  /* P_pred[2,1]: Predicted covariance omega-i_beta */
+float P_pred_2_2;  /* P_pred[2,2]: Predicted omega variance */
+float P_pred_2_3;  /* P_pred[2,3]: Predicted covariance omega-theta */
+float P_pred_3_0;  /* P_pred[3,0]: Predicted covariance theta-i_alpha */
+float P_pred_3_1;  /* P_pred[3,1]: Predicted covariance theta-i_beta */
+float P_pred_3_2;  /* P_pred[3,2]: Predicted covariance theta-omega */
+float P_pred_3_3;  /* P_pred[3,3]: Predicted theta variance */
 
-float K_0_0;
-float K_0_1;    
-float K_1_0;
-float K_1_1;   
-float K_2_0;
-float K_2_1;   
-float K_3_0;
-float K_3_1;
+/* 
+ * Temporary storage for innovation covariance matrix S (2x2)
+ * S = H * P_pred * H^T + R
+ * Used for matrix inversion to compute Kalman gain
+ */
+float temp_0_0_t;  /* temp[0,0]: S[0,0] saved for inversion */
+float temp_0_1_t;  /* temp[0,1]: S[0,1] saved for inversion */
+float temp_1_0_t;  /* temp[1,0]: S[1,0] saved for inversion */
+float temp_1_1_t;  /* temp[1,1]: S[1,1] saved for inversion */
+float temp;        /* Scalar: determinant of S for matrix inversion */
 
-float tempa_0_0;
-float tempa_1_0;
-float tempa_2_0;
-float tempa_3_0;
+/* 
+ * Kalman gain matrix K (4x2)
+ * Optimal weighting between prediction and measurement
+ * K = P_pred * H^T * S^-1
+ * Large K means trust measurements more, small K means trust prediction more
+ */
+float K_0_0;  /* K[0,0]: i_alpha correction gain from i_alpha measurement */
+float K_0_1;  /* K[0,1]: i_alpha correction gain from i_beta measurement */
+float K_1_0;  /* K[1,0]: i_beta correction gain from i_alpha measurement */
+float K_1_1;  /* K[1,1]: i_beta correction gain from i_beta measurement */
+float K_2_0;  /* K[2,0]: omega correction gain from i_alpha measurement (indirect observability) */
+float K_2_1;  /* K[2,1]: omega correction gain from i_beta measurement (indirect observability) */
+float K_3_0;  /* K[3,0]: theta correction gain from i_alpha measurement (indirect observability) */
+float K_3_1;  /* K[3,1]: theta correction gain from i_beta measurement (indirect observability) */
+
+/* 
+ * Corrected state vector tempa (4x1)
+ * A posteriori state estimate after measurement correction
+ * X_corrected = X_pred + K * (Y_measured - Y_pred)
+ */
+float tempa_0_0;  /* tempa[0]: Corrected i_alpha estimate (A) */
+float tempa_1_0;  /* tempa[1]: Corrected i_beta estimate (A) */
+float tempa_2_0;  /* tempa[2]: Corrected omega estimate (rad/s) */
+float tempa_3_0;  /* tempa[3]: Corrected theta estimate (rad) */
 
 #define u_width 7
 #define y_width 1
@@ -298,287 +383,333 @@ void stm32_ekf_Update_wrapper(const real32_T *u,
                                real32_T *y,
                                real_T *xD)
 {
+	/* Extract inputs from input vector */
+	vs_ab_0_0 = u[0];  /* Alpha-axis voltage */
+	vs_ab_1_0 = u[1];  /* Beta-axis voltage */
+	is_ab_0_0 = u[2];  /* Alpha-axis current measurement */
+	is_ab_1_0 = u[3];  /* Beta-axis current measurement */
 
+	/* Update motor parameters (from identification) */
+	Rs = u[4];    /* Stator resistance (Ohms) */
+	Ls = u[5];    /* Stator inductance (Henries) */
+	flux = u[6];  /* PM flux linkage (Webers) */
 
+	/*
+	 * Optional: Load covariance matrix from extended state vector
+	 * Currently disabled - covariance is maintained in global variables
+	 * If enabled, would load P0 matrix from xD[4] through xD[19]
+	 */
 
-
-vs_ab_0_0 = u[0];
-vs_ab_1_0 = u[1];
-is_ab_0_0 = u[2];
-is_ab_1_0 = u[3];
-
-Rs = u[4];//电阻
-Ls = u[5];//电感
-flux = u[6];//磁链
-/*
-P0_0_0 = xD[4];
-P0_0_1 = xD[5];
-P0_0_2 = xD[6];
-P0_0_3 = xD[7];
-P0_1_0 = xD[8];
-P0_1_1 = xD[9];
-P0_1_2 = xD[10];
-P0_1_3 = xD[11];
-P0_2_0 = xD[12];
-P0_2_1 = xD[13];
-P0_2_2 = xD[14];
-P0_2_3 = xD[15];
-P0_3_0 = xD[16];
-P0_3_1 = xD[17];
-P0_3_2 = xD[18];
-P0_3_3 = xD[19];
-*/
-#ifdef  SIMULINK_USE_ARM_MATH  
-F_0_0 = -Rs/Ls;
-//F_0_1 = 0.0f;
-F_0_2 = flux/Ls*arm_sin_f32(xD[3]);
-F_0_3 = flux/Ls*xD[2]*arm_cos_f32(xD[3]);
-//F_1_0 = 0.0f;
-F_1_1 = -Rs/Ls;
-F_1_2 = -flux/Ls*arm_cos_f32(xD[3]);
-F_1_3 = flux/Ls*xD[2]*arm_sin_f32(xD[3]);
-//F_2_0 = 0.0f;
-//F_2_1 = 0.0f;
-//F_2_2 = 0.0f;
-//F_2_3 = 0.0f;
-//F_3_0 = 0.0f;
-//F_3_1 = 0.0f;
-F_3_2 = 1.0f;
-//F_3_3 = 0.0f;
+	/* 
+	 * Step 1: Compute state transition matrix F (Jacobian of state dynamics)
+	 * F = df/dx where f is the nonlinear state equation
+	 * Only non-zero elements are computed (sparse matrix optimization)
+	 */
+#ifdef SIMULINK_USE_ARM_MATH
+	F_0_0 = -Rs / Ls;
+	/* F_0_1 = 0.0f; */
+	F_0_2 = flux / Ls * arm_sin_f32(xD[3]);
+	F_0_3 = flux / Ls * xD[2] * arm_cos_f32(xD[3]);
+	/* F_1_0 = 0.0f; */
+	F_1_1 = -Rs / Ls;
+	F_1_2 = -flux / Ls * arm_cos_f32(xD[3]);
+	F_1_3 = flux / Ls * xD[2] * arm_sin_f32(xD[3]);
+	/* F_2_0 = 0.0f; */
+	/* F_2_1 = 0.0f; */
+	/* F_2_2 = 0.0f; */
+	/* F_2_3 = 0.0f; */
+	/* F_3_0 = 0.0f; */
+	/* F_3_1 = 0.0f; */
+	F_3_2 = 1.0f;
+	/* F_3_3 = 0.0f; */
 #else
-F_0_0 = -Rs/Ls;
-F_0_1 = 0.0f;
-F_0_2 = flux/Ls*sin(xD[3]);
-F_0_3 = flux/Ls*xD[2]*cos(xD[3]);
-F_1_0 = 0.0f;
-F_1_1 = -Rs/Ls;
-F_1_2 = -flux/Ls*cos(xD[3]);
-F_1_3 = flux/Ls*xD[2]*sin(xD[3]);
-F_2_0 = 0.0f;
-F_2_1 = 0.0f;
-F_2_2 = 0.0f;
-F_2_3 = 0.0f;
-F_3_0 = 0.0f;
-F_3_1 = 0.0f;
-F_3_2 = 1.0f;
-F_3_3 = 0.0f;
-#endif
-temp_0_0 = 1.0f;
-//temp_0_1 = 0.0f;
-//temp_0_2 = 0.0f;
-//temp_0_3 = 0.0f;
-//temp_1_0 = 0.0f;
-temp_1_1 = 1.0f;
-//temp_1_2 = 0.0f;
-//temp_1_3 = 0.0f;
-//temp_2_0 = 0.0f;
-//temp_2_1 = 0.0f;
-temp_2_2 = 1.0f;
-//temp_2_3 = 0.0f;
-//temp_3_0 = 0.0f;
-//temp_3_1 = 0.0f;
-//temp_3_2 = 0.0f;
-temp_3_3 = 1.0f;
-
-#ifdef  SIMULINK_USE_ARM_MATH 
-f1_0_0 = -Rs/Ls*xD[0]+flux/Ls*xD[2]*arm_sin_f32(xD[3]);
-f1_1_0 = -Rs/Ls*xD[1]-flux/Ls*xD[2]*arm_cos_f32(xD[3]);
-f1_2_0 = 0.0f;
-f1_3_0 = xD[2];
-#else
-f1_0_0 = -Rs/Ls*xD[0]+flux/Ls*xD[2]*sin(xD[3]);
-f1_1_0 = -Rs/Ls*xD[1]-flux/Ls*xD[2]*cos(xD[3]);
-f1_2_0 = 0.0f;
-f1_3_0 = xD[2];
+	F_0_0 = -Rs / Ls;
+	F_0_1 = 0.0f;
+	F_0_2 = flux / Ls * sin(xD[3]);
+	F_0_3 = flux / Ls * xD[2] * cos(xD[3]);
+	F_1_0 = 0.0f;
+	F_1_1 = -Rs / Ls;
+	F_1_2 = -flux / Ls * cos(xD[3]);
+	F_1_3 = flux / Ls * xD[2] * sin(xD[3]);
+	F_2_0 = 0.0f;
+	F_2_1 = 0.0f;
+	F_2_2 = 0.0f;
+	F_2_3 = 0.0f;
+	F_3_0 = 0.0f;
+	F_3_1 = 0.0f;
+	F_3_2 = 1.0f;
+	F_3_3 = 0.0f;
 #endif
 
+	/* Initialize identity matrix (diagonal elements only) */
+	temp_0_0 = 1.0f;
+	/* temp_0_1 = 0.0f; */
+	/* temp_0_2 = 0.0f; */
+	/* temp_0_3 = 0.0f; */
+	/* temp_1_0 = 0.0f; */
+	temp_1_1 = 1.0f;
+	/* temp_1_2 = 0.0f; */
+	/* temp_1_3 = 0.0f; */
+	/* temp_2_0 = 0.0f; */
+	/* temp_2_1 = 0.0f; */
+	temp_2_2 = 1.0f;
+	/* temp_2_3 = 0.0f; */
+	/* temp_3_0 = 0.0f; */
+	/* temp_3_1 = 0.0f; */
+	/* temp_3_2 = 0.0f; */
+	temp_3_3 = 1.0f;
 
-f2_0_0 = temp_0_0 + (T*F_0_0);
-//f2_0_1 = temp_0_1;
-f2_0_2 = (T*F_0_2);
-f2_0_3 = (T*F_0_3);
-//f2_1_0 = temp_1_0;
-f2_1_1 = temp_1_1 + (T*F_1_1);
-f2_1_2 = (T*F_1_2);
-f2_1_3 = (T*F_1_3);
-//f2_2_0 = temp_2_0;
-//f2_2_1 = temp_2_1;
-f2_2_2 = temp_2_2;
-//f2_2_3 = temp_2_3;
-//f2_3_0 = temp_3_0;
-//f2_3_1 = temp_3_1;
-f2_3_2 = (T*F_3_2);
-f2_3_3 = temp_3_3;
+	/* 
+	 * Step 2: Evaluate nonlinear state equations f(x, u)
+	 * These are the continuous-time derivatives of the state vector
+	 */
+#ifdef SIMULINK_USE_ARM_MATH
+	f1_0_0 = -Rs / Ls * xD[0] + flux / Ls * xD[2] * arm_sin_f32(xD[3]);  /* di_alpha/dt */
+	f1_1_0 = -Rs / Ls * xD[1] - flux / Ls * xD[2] * arm_cos_f32(xD[3]);  /* di_beta/dt */
+	f1_2_0 = 0.0f;   /* domega/dt (no acceleration model) */
+	f1_3_0 = xD[2];  /* dtheta/dt = omega */
+#else
+	f1_0_0 = -Rs / Ls * xD[0] + flux / Ls * xD[2] * sin(xD[3]);  /* di_alpha/dt */
+	f1_1_0 = -Rs / Ls * xD[1] - flux / Ls * xD[2] * cos(xD[3]);  /* di_beta/dt */
+	f1_2_0 = 0.0f;   /* domega/dt (no acceleration model) */
+	f1_3_0 = xD[2];  /* dtheta/dt = omega */
+#endif
 
-X_pred_0_0 = xD[0] + T*(f1_0_0 + B_0_0*vs_ab_0_0);
-X_pred_1_0 = xD[1] + T*(f1_1_0 + B_1_1*vs_ab_1_0);
-X_pred_2_0 = xD[2] + T*(f1_2_0);
-X_pred_3_0 = xD[3] + T*(f1_3_0);
+	/* 
+	 * Step 3: Compute discrete-time state transition matrix
+	 * f2 = I + T*F (first-order approximation)
+	 * Only non-zero elements are computed
+	 */
+	f2_0_0 = temp_0_0 + (T * F_0_0);
+	/* f2_0_1 = temp_0_1; */
+	f2_0_2 = (T * F_0_2);
+	f2_0_3 = (T * F_0_3);
+	/* f2_1_0 = temp_1_0; */
+	f2_1_1 = temp_1_1 + (T * F_1_1);
+	f2_1_2 = (T * F_1_2);
+	f2_1_3 = (T * F_1_3);
+	/* f2_2_0 = temp_2_0; */
+	/* f2_2_1 = temp_2_1; */
+	f2_2_2 = temp_2_2;
+	/* f2_2_3 = temp_2_3; */
+	/* f2_3_0 = temp_3_0; */
+	/* f2_3_1 = temp_3_1; */
+	f2_3_2 = (T * F_3_2);
+	f2_3_3 = temp_3_3;
 
-Y_pred_0_0 = H_0_0*X_pred_0_0;
-Y_pred_1_0 = H_1_1*X_pred_1_0;
+	/* 
+	 * Step 4: State Prediction (a priori estimate)
+	 * X_pred = X + T * (f(X) + B*u)
+	 * Uses Euler integration with sample time T
+	 */
+	X_pred_0_0 = xD[0] + T * (f1_0_0 + B_0_0 * vs_ab_0_0);  /* Predicted i_alpha */
+	X_pred_1_0 = xD[1] + T * (f1_1_0 + B_1_1 * vs_ab_1_0);  /* Predicted i_beta */
+	X_pred_2_0 = xD[2] + T * (f1_2_0);                      /* Predicted omega */
+	X_pred_3_0 = xD[3] + T * (f1_3_0);                      /* Predicted theta */
 
+	/* Predicted measurements: Y_pred = H * X_pred */
+	Y_pred_0_0 = H_0_0 * X_pred_0_0;  /* Predicted i_alpha measurement */
+	Y_pred_1_0 = H_1_1 * X_pred_1_0;  /* Predicted i_beta measurement */
 
-Y_0_0 = is_ab_0_0;
-Y_1_0 = is_ab_1_0;
+	/* Actual measurements from sensors */
+	Y_0_0 = is_ab_0_0;  /* Measured i_alpha */
+	Y_1_0 = is_ab_1_0;  /* Measured i_beta */
 
-P_pred_0_0 = f2_0_0*P0_0_0 + f2_0_2*P0_2_0 + f2_0_3*P0_3_0;
-P_pred_0_1 = f2_0_0*P0_0_1 + f2_0_2*P0_2_1 + f2_0_3*P0_3_1;
-P_pred_0_2 = f2_0_0*P0_0_2 + f2_0_2*P0_2_2 + f2_0_3*P0_3_2;
-P_pred_0_3 = f2_0_0*P0_0_3 + f2_0_2*P0_2_3 + f2_0_3*P0_3_3;    
-P_pred_1_0 = f2_1_1*P0_1_0 + f2_1_2*P0_2_0 + f2_1_3*P0_3_0;
-P_pred_1_1 = f2_1_1*P0_1_1 + f2_1_2*P0_2_1 + f2_1_3*P0_3_1;
-P_pred_1_2 = f2_1_1*P0_1_2 + f2_1_2*P0_2_2 + f2_1_3*P0_3_2;
-P_pred_1_3 = f2_1_1*P0_1_3 + f2_1_2*P0_2_3 + f2_1_3*P0_3_3;  
-P_pred_2_0 = f2_2_2*P0_2_0;
-P_pred_2_1 = f2_2_2*P0_2_1;
-P_pred_2_2 = f2_2_2*P0_2_2;
-P_pred_2_3 = f2_2_2*P0_2_3;
-P_pred_3_0 = f2_3_2*P0_2_0 + f2_3_3*P0_3_0;
-P_pred_3_1 = f2_3_2*P0_2_1 + f2_3_3*P0_3_1;
-P_pred_3_2 = f2_3_2*P0_2_2 + f2_3_3*P0_3_2;
-P_pred_3_3 = f2_3_2*P0_2_3 + f2_3_3*P0_3_3;
+	/* 
+	 * Step 5: Covariance Prediction
+	 * P_pred = F * P0 * F^T + Q
+	 * Split into two matrix multiplications:
+	 *   1. temp = F * P0
+	 *   2. P_pred = temp * F^T + Q
+	 */
+	
+	/* First multiplication: temp = F * P0 (optimized for sparse F) */
+	P_pred_0_0 = f2_0_0 * P0_0_0 + f2_0_2 * P0_2_0 + f2_0_3 * P0_3_0;
+	P_pred_0_1 = f2_0_0 * P0_0_1 + f2_0_2 * P0_2_1 + f2_0_3 * P0_3_1;
+	P_pred_0_2 = f2_0_0 * P0_0_2 + f2_0_2 * P0_2_2 + f2_0_3 * P0_3_2;
+	P_pred_0_3 = f2_0_0 * P0_0_3 + f2_0_2 * P0_2_3 + f2_0_3 * P0_3_3;
+	P_pred_1_0 = f2_1_1 * P0_1_0 + f2_1_2 * P0_2_0 + f2_1_3 * P0_3_0;
+	P_pred_1_1 = f2_1_1 * P0_1_1 + f2_1_2 * P0_2_1 + f2_1_3 * P0_3_1;
+	P_pred_1_2 = f2_1_1 * P0_1_2 + f2_1_2 * P0_2_2 + f2_1_3 * P0_3_2;
+	P_pred_1_3 = f2_1_1 * P0_1_3 + f2_1_2 * P0_2_3 + f2_1_3 * P0_3_3;
+	P_pred_2_0 = f2_2_2 * P0_2_0;
+	P_pred_2_1 = f2_2_2 * P0_2_1;
+	P_pred_2_2 = f2_2_2 * P0_2_2;
+	P_pred_2_3 = f2_2_2 * P0_2_3;
+	P_pred_3_0 = f2_3_2 * P0_2_0 + f2_3_3 * P0_3_0;
+	P_pred_3_1 = f2_3_2 * P0_2_1 + f2_3_3 * P0_3_1;
+	P_pred_3_2 = f2_3_2 * P0_2_2 + f2_3_3 * P0_3_2;
+	P_pred_3_3 = f2_3_2 * P0_2_3 + f2_3_3 * P0_3_3;
 
-P_pred_0_0 = P_pred_0_0*f2_0_0 + P_pred_0_2*f2_0_2 + P_pred_0_3*f2_0_3 + Q_0_0;
-P_pred_0_1 = P_pred_0_1*f2_1_1 + P_pred_0_2*f2_1_2 + P_pred_0_3*f2_1_3;
-P_pred_0_2 = P_pred_0_2*f2_2_2;
-P_pred_0_3 = P_pred_0_2*f2_3_2 + P_pred_0_3*f2_3_3;    
-P_pred_1_0 = P_pred_1_0*f2_0_0 + P_pred_1_2*f2_0_2 + P_pred_1_3*f2_0_3;
-P_pred_1_1 = P_pred_1_1*f2_1_1 + P_pred_1_2*f2_1_2 + P_pred_1_3*f2_1_3 + Q_1_1;
-P_pred_1_2 = P_pred_1_2*f2_2_2;
-P_pred_1_3 = P_pred_1_2*f2_3_2 + P_pred_1_3*f2_3_3;    
-P_pred_2_0 = P_pred_2_0*f2_0_0 + P_pred_2_2*f2_0_2 + P_pred_2_3*f2_0_3;
-P_pred_2_1 = P_pred_2_1*f2_1_1 + P_pred_2_2*f2_1_2 + P_pred_2_3*f2_1_3;
-P_pred_2_2 = P_pred_2_2*f2_2_2 + Q_2_2;
-P_pred_2_3 = P_pred_2_2*f2_3_2 + P_pred_2_3*f2_3_3; 
-P_pred_3_0 = P_pred_3_0*f2_0_0 + P_pred_3_2*f2_0_2 + P_pred_3_3*f2_0_3;
-P_pred_3_1 = P_pred_3_1*f2_1_1 + P_pred_3_2*f2_1_2 + P_pred_3_3*f2_1_3;
-P_pred_3_2 = P_pred_3_2*f2_2_2;
-P_pred_3_3 = P_pred_3_2*f2_3_2 + P_pred_3_3*f2_3_3 + Q_3_3;
+	/* Second multiplication: P_pred = temp * F^T + Q */
+	/* Save values that will be overwritten before they're needed */
+	float P_pred_0_2_saved = P_pred_0_2;
+	float P_pred_1_2_saved = P_pred_1_2;
+	float P_pred_2_2_saved = P_pred_2_2;
+	float P_pred_3_2_saved = P_pred_3_2;
+	
+	P_pred_0_0 = P_pred_0_0 * f2_0_0 + P_pred_0_2 * f2_0_2 + P_pred_0_3 * f2_0_3 + Q_0_0;
+	P_pred_0_1 = P_pred_0_1 * f2_1_1 + P_pred_0_2 * f2_1_2 + P_pred_0_3 * f2_1_3;
+	P_pred_0_2 = P_pred_0_2_saved * f2_2_2;
+	P_pred_0_3 = P_pred_0_2_saved * f2_3_2 + P_pred_0_3 * f2_3_3;
+	P_pred_1_0 = P_pred_1_0 * f2_0_0 + P_pred_1_2 * f2_0_2 + P_pred_1_3 * f2_0_3;
+	P_pred_1_1 = P_pred_1_1 * f2_1_1 + P_pred_1_2 * f2_1_2 + P_pred_1_3 * f2_1_3 + Q_1_1;
+	P_pred_1_2 = P_pred_1_2_saved * f2_2_2;
+	P_pred_1_3 = P_pred_1_2_saved * f2_3_2 + P_pred_1_3 * f2_3_3;
+	P_pred_2_0 = P_pred_2_0 * f2_0_0 + P_pred_2_2 * f2_0_2 + P_pred_2_3 * f2_0_3;
+	P_pred_2_1 = P_pred_2_1 * f2_1_1 + P_pred_2_2 * f2_1_2 + P_pred_2_3 * f2_1_3;
+	P_pred_2_2 = P_pred_2_2_saved * f2_2_2 + Q_2_2;
+	P_pred_2_3 = P_pred_2_2_saved * f2_3_2 + P_pred_2_3 * f2_3_3;
+	P_pred_3_0 = P_pred_3_0 * f2_0_0 + P_pred_3_2 * f2_0_2 + P_pred_3_3 * f2_0_3;
+	P_pred_3_1 = P_pred_3_1 * f2_1_1 + P_pred_3_2 * f2_1_2 + P_pred_3_3 * f2_1_3;
+	P_pred_3_2 = P_pred_3_2_saved * f2_2_2;
+	P_pred_3_3 = P_pred_3_2_saved * f2_3_2 + P_pred_3_3 * f2_3_3 + Q_3_3;
 
-    temp_0_0 = H_0_0*P_pred_0_0;
-    temp_0_1 = H_0_0*P_pred_0_1;
-    temp_0_2 = H_0_0*P_pred_0_2;
-    temp_0_3 = H_0_0*P_pred_0_3;   
-    temp_1_0 = H_1_1*P_pred_1_0;
-    temp_1_1 = H_1_1*P_pred_1_1;
-    temp_1_2 = H_1_1*P_pred_1_2;
-    temp_1_3 = H_1_1*P_pred_1_3;
+	/* 
+	 * Step 6: Compute Innovation Covariance S = H * P_pred * H^T + R
+	 * First: temp = H * P_pred
+	 */
+	temp_0_0 = H_0_0 * P_pred_0_0;
+	temp_0_1 = H_0_0 * P_pred_0_1;
+	temp_0_2 = H_0_0 * P_pred_0_2;
+	temp_0_3 = H_0_0 * P_pred_0_3;
+	temp_1_0 = H_1_1 * P_pred_1_0;
+	temp_1_1 = H_1_1 * P_pred_1_1;
+	temp_1_2 = H_1_1 * P_pred_1_2;
+	temp_1_3 = H_1_1 * P_pred_1_3;
 
+	/* Second: S = temp * H^T + R (innovation covariance matrix) */
+	temp_0_0 = temp_0_0 * H_0_0 + R_0_0;
+	temp_0_1 = temp_0_1 * H_1_1;
+	temp_1_0 = temp_1_0 * H_0_0;
+	temp_1_1 = temp_1_1 * H_1_1 + R_1_1;
 
-    temp_0_0 = temp_0_0*H_0_0+ R_0_0;
-    temp_0_1 = temp_0_1*H_1_1;    
-    temp_1_0 = temp_1_0*H_0_0;
-    temp_1_1 = temp_1_1*H_1_1 + R_1_1;
+	/* Save innovation covariance for inversion */
+	temp_0_0_t = temp_0_0;
+	temp_0_1_t = temp_0_1;
+	temp_1_0_t = temp_1_0;
+	temp_1_1_t = temp_1_1;
 
-temp_0_0_t = temp_0_0;
-temp_0_1_t = temp_0_1;
-temp_1_0_t = temp_1_0;
-temp_1_1_t = temp_1_1;
+	/* 
+	 * Step 7: Compute inverse of innovation covariance S^-1
+	 * For 2x2 matrix: inv = (1/det) * [d, -b; -c, a]
+	 */
+	temp = temp_0_0 * temp_1_1 - temp_0_1 * temp_1_0;  /* Determinant */
+	if (temp != 0)
+	{
+		temp_0_0 = temp_1_1_t / temp;
+		temp_0_1 = -temp_0_1_t / temp;
+		temp_1_0 = -temp_1_0_t / temp;
+		temp_1_1 = temp_0_0_t / temp;
+	}
 
-temp = temp_0_0*temp_1_1 - temp_0_1*temp_1_0;
-if(temp != 0)
-{
-   temp_0_0 = temp_1_1_t/temp;
-   temp_0_1 = -temp_0_1_t/temp;
-   temp_1_0 = -temp_1_0_t/temp;
-   temp_1_1 = temp_0_0_t/temp;
-}
+	/* 
+	 * Step 8: Compute Kalman Gain K = P_pred * H^T * S^-1
+	 * First: temp = P_pred * H^T
+	 */
+	K_0_0 = P_pred_0_0 * H_0_0;
+	K_0_1 = P_pred_0_1 * H_1_1;
+	K_1_0 = P_pred_1_0 * H_0_0;
+	K_1_1 = P_pred_1_1 * H_1_1;
+	K_2_0 = P_pred_2_0 * H_0_0;
+	K_2_1 = P_pred_2_1 * H_1_1;
+	K_3_0 = P_pred_3_0 * H_0_0;
+	K_3_1 = P_pred_3_1 * H_1_1;
 
-K_0_0 = P_pred_0_0*H_0_0;
-K_0_1 = P_pred_0_1*H_1_1;    
-K_1_0 = P_pred_1_0*H_0_0;
-K_1_1 = P_pred_1_1*H_1_1;   
-K_2_0 = P_pred_2_0*H_0_0;
-K_2_1 = P_pred_2_1*H_1_1;   
-K_3_0 = P_pred_3_0*H_0_0;
-K_3_1 = P_pred_3_1*H_1_1;
+	/* Second: K = temp * S^-1 (Kalman gain matrix) */
+	/* Save original values to avoid overwriting during calculation */
+	float K_0_0_orig = K_0_0;
+	float K_0_1_orig = K_0_1;
+	float K_1_0_orig = K_1_0;
+	float K_1_1_orig = K_1_1;
+	float K_2_0_orig = K_2_0;
+	float K_2_1_orig = K_2_1;
+	float K_3_0_orig = K_3_0;
+	float K_3_1_orig = K_3_1;
+	
+	/* Compute K = temp * S^-1 using saved original values */
+	K_0_0 = K_0_0_orig * temp_0_0 + K_0_1_orig * temp_1_0;
+	K_0_1 = K_0_0_orig * temp_0_1 + K_0_1_orig * temp_1_1;
+	K_1_0 = K_1_0_orig * temp_0_0 + K_1_1_orig * temp_1_0;
+	K_1_1 = K_1_0_orig * temp_0_1 + K_1_1_orig * temp_1_1;
+	K_2_0 = K_2_0_orig * temp_0_0 + K_2_1_orig * temp_1_0;
+	K_2_1 = K_2_0_orig * temp_0_1 + K_2_1_orig * temp_1_1;
+	K_3_0 = K_3_0_orig * temp_0_0 + K_3_1_orig * temp_1_0;
+	K_3_1 = K_3_0_orig * temp_0_1 + K_3_1_orig * temp_1_1;
 
+	/* 
+	 * Step 9: State Correction (a posteriori estimate)
+	 * X = X_pred + K * (Y_measured - Y_pred)
+	 * Innovation: (Y_measured - Y_pred) is the measurement residual
+	 */
+	tempa_0_0 = X_pred_0_0 + K_0_0 * (Y_0_0 - Y_pred_0_0) + K_0_1 * (Y_1_0 - Y_pred_1_0);
+	tempa_1_0 = X_pred_1_0 + K_1_0 * (Y_0_0 - Y_pred_0_0) + K_1_1 * (Y_1_0 - Y_pred_1_0);
+	tempa_2_0 = X_pred_2_0 + K_2_0 * (Y_0_0 - Y_pred_0_0) + K_2_1 * (Y_1_0 - Y_pred_1_0);
+	tempa_3_0 = X_pred_3_0 + K_3_0 * (Y_0_0 - Y_pred_0_0) + K_3_1 * (Y_1_0 - Y_pred_1_0);
 
+	/* 
+	 * Step 10: Covariance Correction
+	 * P = (I - K*H) * P_pred
+	 * First: Compute K*H
+	 */
+	temp_0_0 = K_0_0 * H_0_0;
+	temp_0_1 = K_0_1 * H_1_1;
+	/* temp_0_2 = 0.0f; */
+	/* temp_0_3 = 0.0f; */
+	temp_1_0 = K_1_0 * H_0_0;
+	temp_1_1 = K_1_1 * H_1_1;
+	/* temp_1_2 = 0.0f; */
+	/* temp_1_3 = 0.0f; */
+	temp_2_0 = K_2_0 * H_0_0;
+	temp_2_1 = K_2_1 * H_1_1;
+	/* temp_2_2 = 0.0f; */
+	/* temp_2_3 = 0.0f; */
+	temp_3_0 = K_3_0 * H_0_0;
+	temp_3_1 = K_3_1 * H_1_1;
+	/* temp_3_2 = 0.0f; */
+	/* temp_3_3 = 0.0f; */
 
-K_0_0 = K_0_0*temp_0_0 + K_0_1*temp_1_0;
-K_0_1 = K_0_0*temp_0_1 + K_0_1*temp_1_1;  
-K_1_0 = K_1_0*temp_0_0 + K_1_1*temp_1_0;
-K_1_1 = K_1_0*temp_0_1 + K_1_1*temp_1_1;    
-K_2_0 = K_2_0*temp_0_0 + K_2_1*temp_1_0;
-K_2_1 = K_2_0*temp_0_1 + K_2_1*temp_1_1;   
-K_3_0 = K_3_0*temp_0_0 + K_3_1*temp_1_0;
-K_3_1 = K_3_0*temp_0_1 + K_3_1*temp_1_1;
+	/* Second: P = P_pred - (K*H) * P_pred (Joseph form update) */
+	P0_0_0 = P_pred_0_0 - (temp_0_0 * P_pred_0_0 + temp_0_1 * P_pred_1_0);
+	P0_0_1 = P_pred_0_1 - (temp_0_0 * P_pred_0_1 + temp_0_1 * P_pred_1_1);
+	P0_0_2 = P_pred_0_2 - (temp_0_0 * P_pred_0_2 + temp_0_1 * P_pred_1_2);
+	P0_0_3 = P_pred_0_3 - (temp_0_0 * P_pred_0_3 + temp_0_1 * P_pred_1_3);
+	P0_1_0 = P_pred_1_0 - (temp_1_0 * P_pred_0_0 + temp_1_1 * P_pred_1_0);
+	P0_1_1 = P_pred_1_1 - (temp_1_0 * P_pred_0_1 + temp_1_1 * P_pred_1_1);
+	P0_1_2 = P_pred_1_2 - (temp_1_0 * P_pred_0_2 + temp_1_1 * P_pred_1_2);
+	P0_1_3 = P_pred_1_3 - (temp_1_0 * P_pred_0_3 + temp_1_1 * P_pred_1_3);
+	P0_2_0 = P_pred_2_0 - (temp_2_0 * P_pred_0_0 + temp_2_1 * P_pred_1_0);
+	P0_2_1 = P_pred_2_1 - (temp_2_0 * P_pred_0_1 + temp_2_1 * P_pred_1_1);
+	P0_2_2 = P_pred_2_2 - (temp_2_0 * P_pred_0_2 + temp_2_1 * P_pred_1_2);
+	P0_2_3 = P_pred_2_3 - (temp_2_0 * P_pred_0_3 + temp_2_1 * P_pred_1_3);
+	P0_3_0 = P_pred_3_0 - (temp_3_0 * P_pred_0_0 + temp_3_1 * P_pred_1_0);
+	P0_3_1 = P_pred_3_1 - (temp_3_0 * P_pred_0_1 + temp_3_1 * P_pred_1_1);
+	P0_3_2 = P_pred_3_2 - (temp_3_0 * P_pred_0_2 + temp_3_1 * P_pred_1_2);
+	P0_3_3 = P_pred_3_3 - (temp_3_0 * P_pred_0_3 + temp_3_1 * P_pred_1_3);
 
-tempa_0_0 = X_pred_0_0 + K_0_0*(Y_0_0 - Y_pred_0_0) + K_0_1*(Y_1_0 - Y_pred_1_0);
-tempa_1_0 = X_pred_1_0 + K_1_0*(Y_0_0 - Y_pred_0_0) + K_1_1*(Y_1_0 - Y_pred_1_0);
-tempa_2_0 = X_pred_2_0 + K_2_0*(Y_0_0 - Y_pred_0_0) + K_2_1*(Y_1_0 - Y_pred_1_0);
-tempa_3_0 = X_pred_3_0 + K_3_0*(Y_0_0 - Y_pred_0_0) + K_3_1*(Y_1_0 - Y_pred_1_0);
+	/* Wrap rotor angle to [0, 2*PI] range */
+#ifdef SIMULINK_USE_ARM_MATH
+	if (tempa_3_0 > (2.0f * PI))
+	{
+		tempa_3_0 -= (2.0f * PI);
+	}
+#else
+	if (tempa_3_0 > (6.2831853f))  /* 2*PI approximation */
+	{
+		tempa_3_0 -= (6.2831853f);
+	}
+#endif
 
-    temp_0_0 = K_0_0*H_0_0;
-    temp_0_1 = K_0_1*H_1_1;
-    //temp_0_2 = 0.0f;
-    //temp_0_3 = 0.0f;    
-    temp_1_0 = K_1_0*H_0_0;
-    temp_1_1 = K_1_1*H_1_1;
-    //temp_1_2 = 0.0f;
-    //temp_1_3 = 0.0f;    
-    temp_2_0 = K_2_0*H_0_0;
-    temp_2_1 = K_2_1*H_1_1;
-    //temp_2_2 = 0.0f;
-    //temp_2_3 = 0.0f;   
-    temp_3_0 = K_3_0*H_0_0;
-    temp_3_1 = K_3_1*H_1_1;
-    //temp_3_2 = 0.0f;
-    //temp_3_3 = 0.0f;
+	/* Store corrected states back to state vector */
+	xD[0] = tempa_0_0;  /* Corrected i_alpha */
+	xD[1] = tempa_1_0;  /* Corrected i_beta */
+	xD[2] = tempa_2_0;  /* Corrected omega */
+	xD[3] = tempa_3_0;  /* Corrected theta (wrapped) */
 
-
-   
-   
-    P0_0_0 =   P_pred_0_0 - (temp_0_0*P_pred_0_0 + temp_0_1*P_pred_1_0);
-    P0_0_1 =   P_pred_0_1 - (temp_0_0*P_pred_0_1 + temp_0_1*P_pred_1_1);
-    P0_0_2 =   P_pred_0_2 - (temp_0_0*P_pred_0_2 + temp_0_1*P_pred_1_2);
-    P0_0_3 =   P_pred_0_3 - (temp_0_0*P_pred_0_3 + temp_0_1*P_pred_1_3);  
-    P0_1_0 =   P_pred_1_0 - (temp_1_0*P_pred_0_0 + temp_1_1*P_pred_1_0);
-    P0_1_1 =   P_pred_1_1 - (temp_1_0*P_pred_0_1 + temp_1_1*P_pred_1_1);
-    P0_1_2 =   P_pred_1_2 - (temp_1_0*P_pred_0_2 + temp_1_1*P_pred_1_2);
-    P0_1_3 =   P_pred_1_3 - (temp_1_0*P_pred_0_3 + temp_1_1*P_pred_1_3);    
-    P0_2_0 =   P_pred_2_0 - (temp_2_0*P_pred_0_0 + temp_2_1*P_pred_1_0);
-    P0_2_1 =   P_pred_2_1 - (temp_2_0*P_pred_0_1 + temp_2_1*P_pred_1_1);
-    P0_2_2 =   P_pred_2_2 - (temp_2_0*P_pred_0_2 + temp_2_1*P_pred_1_2);
-    P0_2_3 =   P_pred_2_3 - (temp_2_0*P_pred_0_3 + temp_2_1*P_pred_1_3);  
-    P0_3_0 =   P_pred_3_0 - (temp_3_0*P_pred_0_0 + temp_3_1*P_pred_1_0);
-    P0_3_1 =   P_pred_3_1 - (temp_3_0*P_pred_0_1 + temp_3_1*P_pred_1_1);
-    P0_3_2 =   P_pred_3_2 - (temp_3_0*P_pred_0_2 + temp_3_1*P_pred_1_2);
-    P0_3_3 =   P_pred_3_3 - (temp_3_0*P_pred_0_3 + temp_3_1*P_pred_1_3);
-#ifdef  SIMULINK_USE_ARM_MATH
-    if(tempa_3_0>(2.0f*PI))
-    {
-       tempa_3_0 -= (2.0f*PI);
-    }
-    #else
-        if(tempa_3_0>(6.2831853f))
-    {
-       tempa_3_0 -= (6.2831853f);
-    }
-
-    #endif
-xD[0] = tempa_0_0;
-xD[1] = tempa_1_0;
-xD[2] = tempa_2_0;
-xD[3] = tempa_3_0;
-/*
-xD[4] = P0_0_0;
-xD[5] = P0_0_1;
-xD[6] = P0_0_2;
-xD[7] = P0_0_3;
-xD[8] = P0_1_0;
-xD[9] = P0_1_1;
-xD[10] = P0_1_2;
-xD[11] = P0_1_3;
-xD[12] = P0_2_0;
-xD[13] = P0_2_1;
-xD[14] = P0_2_2;
-xD[15] = P0_2_3;
-xD[16] = P0_3_0;
-xD[17] = P0_3_1;
-xD[18] = P0_3_2;
-xD[19] = P0_3_3;*/
-
+	/*
+	 * Optional: Store covariance matrix in extended state vector
+	 * Currently disabled - covariance maintained in global variables
+	 * If enabled, would store P0 matrix to xD[4] through xD[19]
+	 */
 }
 
