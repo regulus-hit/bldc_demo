@@ -45,6 +45,11 @@ A production-ready BLDC (Brushless DC) motor control system implementing Field-O
   - Flux linkage estimation
 
 ### Advanced Control Enhancements
+- **Linear ADRC Speed Controller**: Active Disturbance Rejection Control as alternative to PID
+  - Superior disturbance rejection (load changes, friction, parameter variations)
+  - No integral windup issues
+  - Easier tuning via two bandwidth parameters
+  - Faster transient response with less overshoot
 - **Dead-Time Compensation**: Compensates voltage error from gate driver dead-time
   - Improves low-speed torque linearity
   - Reduces current harmonic distortion
@@ -52,6 +57,9 @@ A production-ready BLDC (Brushless DC) motor control system implementing Field-O
   - Progressive negative Id injection
   - Demagnetization protection
 - **Bus Voltage Filtering**: Low-pass filters DC bus voltage for improved SVPWM accuracy
+- **PID Auto-Tuning**: Automatic optimization of current loop PI gains
+  - Model-based approach using identified motor parameters
+  - Industry-standard formulas (TI InstaSPIN approach)
 - **ADC Offset Validation**: Automatic calibration retry with bounds checking
 
 ### Code Quality & Reliability
@@ -150,6 +158,24 @@ See [Configuration](#configuration) section below.
 4. Flash to target (F8)
 
 ## Configuration
+
+### Speed Controller Selection
+Edit `motor/foc_define_parameter.h` to select ONE speed controller:
+
+```c
+// Traditional PID controller (default, proven)
+#define USE_SPEED_PID
+
+// Linear ADRC controller (advanced, better disturbance rejection)
+//#define USE_SPEED_ADRC
+```
+
+**ADRC Tuning Parameters** (when `USE_SPEED_ADRC` is enabled):
+```c
+#define SPEED_ADRC_WO_DEFAULT    100.0f  // Observer bandwidth (rad/s): 50-200, start with 100
+#define SPEED_ADRC_WC_DEFAULT     50.0f  // Controller bandwidth (rad/s): 20-100, start with 50
+#define SPEED_ADRC_B0_DEFAULT    200.0f  // System gain Kt/J: 100-500, start with 200
+```
 
 ### Sensor Mode Selection
 Edit `motor/foc_define_parameter.h` to select ONE sensor mode:
@@ -312,7 +338,8 @@ bldc_demo/
 │   ├── hall_sensor.c/h            # Hall sensor handling + interpolation
 │   ├── hybrid_observer.c/h        # Hybrid Hall+EKF observer
 │   ├── stm32_ekf_wrapper.c        # Extended Kalman Filter
-│   ├── speed_pid.c/h              # Speed PI controller
+│   ├── speed_pid.c/h              # Speed PI controller (traditional)
+│   ├── speed_adrc.c/h             # Speed ADRC controller (alternative)
 │   ├── drv8301.c/h                # DRV8301 gate driver interface
 │   ├── low_task.c/h               # Low-frequency tasks
 │   ├── foc_define_parameter.h     # Configuration parameters

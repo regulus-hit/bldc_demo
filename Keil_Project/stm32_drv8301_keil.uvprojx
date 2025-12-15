@@ -719,6 +719,11 @@
               <FilePath>..\motor\speed_pid.c</FilePath>
             </File>
             <File>
+              <FileName>speed_adrc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\motor\speed_adrc.c</FilePath>
+            </File>
+            <File>
               <FileName>stm32_ekf_wrapper.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\motor\stm32_ekf_wrapper.c</FilePath>

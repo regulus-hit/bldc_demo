@@ -5,6 +5,7 @@
  **********************************/
 #include "main.h"
 #include "foc_algorithm.h"
+#include "foc_define_parameter.h"
 
 #ifdef HYBRID_HALL_EKF_SELECT
 #include "hybrid_observer.h"
@@ -12,6 +13,13 @@
 
 #ifdef ENABLE_PID_AUTOTUNE
 #include "pid_autotune.h"
+#endif
+
+/* Include appropriate speed controller based on configuration */
+#ifdef USE_SPEED_ADRC
+#include "speed_adrc.h"
+#else
+#include "speed_pid.h"
 #endif
 
 /* D-axis current PI controller parameters */
@@ -516,8 +524,8 @@ void foc_algorithm_initialize(void)
 		Current_Q_PID.I_Sum = 0.0f;
 	}
 
-	/* Initialize speed loop PI controller */
-	speed_pid_initialize();
+	/* Initialize speed loop controller (PID or ADRC based on configuration) */
+	speed_controller_init();
 
 	/* Initialize Extended Kalman Filter for position/speed estimation */
 	stm32_ekf_Start_wrapper(&FOC_Interface_states.EKF_States[0]);

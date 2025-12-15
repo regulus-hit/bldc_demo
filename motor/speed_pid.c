@@ -1,7 +1,13 @@
 /**********************************
  * Speed PI Controller Implementation
  * Outer loop speed control for BLDC motor
+ * 
+ * This file is compiled only when USE_SPEED_PID is defined
  **********************************/
+#include "foc_define_parameter.h"
+
+#ifdef USE_SPEED_PID
+
 #include "speed_pid.h"
 
 #define SPEED_PID_PERIOD 0.001F		/* Speed loop period: 1ms (1kHz) */
@@ -20,7 +26,7 @@ real32_T Speed_Pid_Out;		/* Speed PID output -> Iq reference for torque control 
 SPEED_PID_DEF Speed_Pid;
 
 /**
- * @brief Speed PI Controller Calculation
+ * @brief Speed Controller Calculation (PID Implementation)
  * 
  * Cascaded outer loop controller for speed regulation.
  * Converts speed error to torque current reference (Iq).
@@ -38,7 +44,7 @@ SPEED_PID_DEF Speed_Pid;
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_pid_temp PI controller state structure
  */
-void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_pid_temp)
+void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_pid_temp)
 {
 	real32_T error;
 	real32_T temp;
@@ -73,12 +79,12 @@ void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SP
 }
 
 /**
- * @brief Initialize Speed PI Controller
+ * @brief Initialize Speed Controller (PID Implementation)
  * 
  * Loads PI gains and limits, resets integral accumulator.
  * Must be called before motor startup.
  */
-void speed_pid_initialize(void)
+void speed_controller_init(void)
 {
 	Speed_Pid.P_Gain = SPEED_PI_P;
 	Speed_Pid.I_Gain = SPEED_PI_I;
@@ -88,4 +94,5 @@ void speed_pid_initialize(void)
 	Speed_Pid.I_Sum = 0.0f;
 }
 
+#endif  /* USE_SPEED_PID */
 

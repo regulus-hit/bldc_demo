@@ -177,8 +177,8 @@ void low_task_c_systick_sub(void)
 		drv8301_protection();
 	}
 
-	/* Execute speed PI controller at 1kHz */
-	Speed_Pid_Calc(Speed_Ref, Speed_Fdk, &Speed_Pid_Out, &Speed_Pid);
+	/* Execute speed controller at 1kHz (PID or ADRC based on configuration) */
+	speed_controller_calc(Speed_Ref, Speed_Fdk, &Speed_Pid_Out, &Speed_Pid);
 
 	/* Divide down to 100Hz for low priority tasks */
 	hz_100_cnt++;

@@ -35,6 +35,18 @@
 #define FLUX_PARAMETER   0.005000f        //磁链
 
 /*******************************************************************************
+ * Speed Controller Selection
+ * Select ONE of the following speed controllers:
+ * - USE_SPEED_PID: Traditional PID controller (default, proven)
+ * - USE_SPEED_ADRC: Linear Active Disturbance Rejection Control (advanced)
+ * 
+ * ADRC provides better disturbance rejection and faster response but requires
+ * more computational resources. PID is simpler and well-tested.
+ ******************************************************************************/
+#define USE_SPEED_PID          // Traditional PID speed controller
+//#define USE_SPEED_ADRC         // Linear ADRC speed controller
+
+/*******************************************************************************
  * Advanced FOC Enhancement Features
  * Uncomment to enable each feature independently for debugging and testing
  ******************************************************************************/
@@ -215,5 +227,40 @@
 #define HALL_MISALIGNMENT_MAX_CORRECTION  0.35f
 
 #endif  /* ENABLE_HALL_INTERPOLATION */
+
+/*******************************************************************************
+ * Linear ADRC Speed Controller Parameters
+ * Used when USE_SPEED_ADRC is enabled
+ ******************************************************************************/
+#ifdef USE_SPEED_ADRC
+
+/* Observer bandwidth (rad/s)
+ * Determines how fast the ESO tracks disturbances
+ * Typical: 50-200 rad/s (higher = faster disturbance estimation, more sensitive to noise)
+ * Start with 100 rad/s and tune based on motor response */
+#define SPEED_ADRC_WO_DEFAULT           100.0f
+
+/* Controller bandwidth (rad/s)
+ * Determines closed-loop response speed
+ * Typical: 20-100 rad/s (higher = faster response, potential overshoot)
+ * Generally set to 1/2 to 1/3 of observer bandwidth
+ * Start with 50 rad/s and tune for desired response */
+#define SPEED_ADRC_WC_DEFAULT           50.0f
+
+/* System gain estimate (b0)
+ * Physical meaning: Kt/J (torque constant / rotor inertia)
+ * For BLDC: relates Iq current to angular acceleration
+ * Rough estimate: b0 = Kt/J ≈ 100-500 for small BLDC motors
+ * Can be identified experimentally or from motor datasheet
+ * Start with 200 and adjust based on system response */
+#define SPEED_ADRC_B0_DEFAULT           200.0f
+
+/* Output limits (Amperes)
+ * Maximum and minimum Iq current reference
+ * Should match motor current rating and power supply capability */
+#define SPEED_ADRC_OUTPUT_MAX           5.0f
+#define SPEED_ADRC_OUTPUT_MIN          -5.0f
+
+#endif  /* USE_SPEED_ADRC */
 
 #endif  /* __FOC_DEFINE_PARAMETER_H__ */
