@@ -193,7 +193,7 @@ Always test incrementally with conservative parameter values.
 ## References
 
 Based on recommendations in:
-- **Document:** `docs/FOC_Control_Loop_Analysis.md`
+- **Document:** `docs/project_stat.md`
 - **Section:** "Recommendations for Future Enhancement"
 - **Priority:** HIGH (items 1-3)
 
