@@ -40,14 +40,14 @@ void hall_interpolation_initialize(void);
  * Uses velocity-based linear interpolation for higher resolution position feedback.
  * 
  * Algorithm:
- * 1. Calculate time elapsed since last Hall edge
+ * 1. Read timer counter (gives time since last Hall edge - timer resets on edges)
  * 2. Interpolate position: angle = last_edge_angle + velocity * time_elapsed
  * 3. Apply misalignment offset correction if enabled
  * 4. Normalize angle to [0, 2*PI] range
  * 
- * @param current_time Current system timestamp (microseconds or timer ticks)
+ * @param timer_count Hall timer counter value (time since last edge in timer ticks)
  */
-void hall_interpolation_update(uint32_t current_time);
+void hall_interpolation_update(uint32_t timer_count);
 #endif
 
 void hall_sensor_c_tim2_sub(void);

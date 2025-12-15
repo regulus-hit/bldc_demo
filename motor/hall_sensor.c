@@ -26,6 +26,29 @@ float hall_last_edge_angle = 0.0f;     /* Angle at last Hall edge */
 uint8_t hall_interpolation_initialized = 0;
 
 /**
+ * @brief Normalize angle to [0, 2*PI] range efficiently
+ * 
+ * Uses fmodf for efficient normalization. In typical FOC operation,
+ * angles are already near [0, 2π], so this is faster than while loops.
+ * 
+ * @param angle Input angle (radians)
+ * @return Normalized angle in [0, 2*PI] range
+ */
+static inline float normalize_angle_to_2pi(float angle)
+{
+	/* Use fmodf for efficient normalization */
+	angle = fmodf(angle, MATH_2PI);
+	
+	/* Handle negative angles */
+	if (angle < 0.0f)
+	{
+		angle += MATH_2PI;
+	}
+	
+	return angle;
+}
+
+/**
  * @brief Initialize Hall sensor interpolation
  */
 void hall_interpolation_initialize(void)
@@ -50,9 +73,13 @@ void hall_interpolation_initialize(void)
  *   - Position = last_edge_angle + velocity * time_since_edge
  *   - Apply misalignment correction
  * 
- * @param current_time Current system timestamp in units matching HALL_TIM_CLOCK
+ * Note: HALL_TIM is configured in TIM_SlaveMode_Reset, so the counter resets
+ * to zero on each Hall edge. Therefore, TIM_GetCounter() directly gives us
+ * the time elapsed since the last Hall edge.
+ * 
+ * @param timer_count Current Hall timer counter value (time since last edge)
  */
-void hall_interpolation_update(uint32_t current_time)
+void hall_interpolation_update(uint32_t timer_count)
 {
 	float speed_abs;
 	float time_since_edge;
@@ -71,25 +98,15 @@ void hall_interpolation_update(uint32_t current_time)
 	if (speed_abs < HALL_INTERPOLATION_MIN_SPEED)
 	{
 		/* Use raw Hall angle with misalignment correction */
-		hall_angle_interpolated = hall_angle + hall_misalignment_offset;
-		
-		/* Normalize to [0, 2*PI] */
-		while (hall_angle_interpolated >= MATH_2PI)
-		{
-			hall_angle_interpolated -= MATH_2PI;
-		}
-		while (hall_angle_interpolated < 0.0f)
-		{
-			hall_angle_interpolated += MATH_2PI;
-		}
-		
+		hall_angle_interpolated = normalize_angle_to_2pi(hall_angle + hall_misalignment_offset);
 		return;
 	}
 	
 	/* High-speed mode: Interpolate position between Hall edges */
 	
-	/* Calculate time elapsed since last Hall edge (in units of timer clock) */
-	time_since_edge = (float)(current_time - hall_edge_timestamp);
+	/* Timer count directly gives time since last Hall edge (counter resets on edges)
+	 * This is more reliable than timestamp subtraction */
+	time_since_edge = (float)timer_count;
 	
 	/* Calculate interpolated angle increment based on velocity
 	 * Angular velocity = hall_speed * 2*PI (rad/s electrical)
@@ -99,17 +116,9 @@ void hall_interpolation_update(uint32_t current_time)
 	interpolated_increment = (hall_speed * MATH_2PI) * (time_since_edge / (float)HALL_TIM_CLOCK);
 	
 	/* Interpolated angle = last edge angle + increment + misalignment offset */
-	hall_angle_interpolated = hall_last_edge_angle + interpolated_increment + hall_misalignment_offset;
-	
-	/* Normalize angle to [0, 2*PI] range */
-	while (hall_angle_interpolated >= MATH_2PI)
-	{
-		hall_angle_interpolated -= MATH_2PI;
-	}
-	while (hall_angle_interpolated < 0.0f)
-	{
-		hall_angle_interpolated += MATH_2PI;
-	}
+	hall_angle_interpolated = normalize_angle_to_2pi(
+		hall_last_edge_angle + interpolated_increment + hall_misalignment_offset
+	);
 	
 #ifdef ENABLE_HALL_MISALIGNMENT_CORRECTION
 	/**
@@ -155,14 +164,16 @@ void hall_sensor_c_tim2_sub(void)
 	float temp;
 	if (TIM_GetFlagStatus(HALL_TIM, TIM_FLAG_CC1) == SET)
 	{
+		/* Capture edge timestamp (read once for consistency) */
+		uint32_t current_timestamp = TIM_GetCapture1(HALL_TIM);
+		temp = (float)current_timestamp;
+		
 		/* Calculate speed and angle increment from capture period */
-		temp = (float)(TIM_GetCapture1(HALL_TIM));
-		hall_angle_add = (float)HALL_ANGLE_FACTOR / (float)(temp);
-		hall_speed = (float)HALL_SPEED_FACTOR / (float)(temp);
+		hall_angle_add = (float)HALL_ANGLE_FACTOR / temp;
+		hall_speed = (float)HALL_SPEED_FACTOR / temp;
 		
 #ifdef ENABLE_HALL_INTERPOLATION
 		/* Save edge timing information for interpolation */
-		uint32_t current_timestamp = TIM_GetCapture1(HALL_TIM);
 		hall_edge_interval = current_timestamp - hall_edge_timestamp;
 		hall_edge_timestamp = current_timestamp;
 #endif
@@ -175,37 +186,37 @@ void hall_sensor_c_tim2_sub(void)
 		/* Decode Hall sensor state to rotor angle (6 states per electrical cycle) */
 		if (hall_read_temp == 0x05)
 		{
-			hall_angle = 0.0f + PHASE_SHIFT_ANGLE;				/* State 101: 0 degrees */
+			hall_angle = 0.0f + PHASE_SHIFT_ANGLE;					/* State 101: 0 degrees */
 		}
 		else if (hall_read_temp == 0x04)
 		{
-			hall_angle = (PI / 3.0f) + PHASE_SHIFT_ANGLE;		/* State 100: 60 degrees */
+			hall_angle = (MATH_PI / 3.0f) + PHASE_SHIFT_ANGLE;		/* State 100: 60 degrees */
 		}
 		else if (hall_read_temp == 0x06)
 		{
-			hall_angle = (PI * 2.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 110: 120 degrees */
+			hall_angle = (MATH_PI * 2.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 110: 120 degrees */
 		}
 		else if (hall_read_temp == 0x02)
 		{
-			hall_angle = PI + PHASE_SHIFT_ANGLE;				/* State 010: 180 degrees */
+			hall_angle = MATH_PI + PHASE_SHIFT_ANGLE;				/* State 010: 180 degrees */
 		}
 		else if (hall_read_temp == 0x03)
 		{
-			hall_angle = (PI * 4.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 011: 240 degrees */
+			hall_angle = (MATH_PI * 4.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 011: 240 degrees */
 		}
 		else if (hall_read_temp == 0x01)
 		{
-			hall_angle = (PI * 5.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 001: 300 degrees */
+			hall_angle = (MATH_PI * 5.0f / 3.0f) + PHASE_SHIFT_ANGLE;	/* State 001: 300 degrees */
 		}
 		
 		/* Wrap angle to [0, 2*PI] range */
 		if (hall_angle < 0.0f)
 		{
-			hall_angle += 2.0f * PI;
+			hall_angle += MATH_2PI;
 		}
-		else if (hall_angle > (2.0f * PI))
+		else if (hall_angle > MATH_2PI)
 		{
-			hall_angle -= 2.0f * PI;
+			hall_angle -= MATH_2PI;
 		}
 
 #ifdef ENABLE_HALL_INTERPOLATION
@@ -235,12 +246,9 @@ void hall_sensor_c_tim2_sub(void)
 				/* Calculate position error at Hall edge (shortest angular path) */
 				float position_error = hall_angle - hall_angle_interpolated;
 				
-				/* Normalize error to [-PI, PI] range */
-				while (position_error > MATH_PI)
-				{
-					position_error -= MATH_2PI;
-				}
-				while (position_error < -MATH_PI)
+				/* Normalize error to [-PI, PI] range using efficient approach */
+				position_error = fmodf(position_error + MATH_PI, MATH_2PI) - MATH_PI;
+				if (position_error < -MATH_PI)
 				{
 					position_error += MATH_2PI;
 				}
