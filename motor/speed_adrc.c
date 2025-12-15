@@ -25,11 +25,12 @@ real32_T SPEED_ADRC_B0 = 200.0F;         /* System gain estimate (Kt/J, motor-de
 real32_T SPEED_ADRC_LOW_LIMIT = -5.0F;   /* Lower output limit (Iq) */
 real32_T SPEED_ADRC_UP_LIMIT = 5.0F;     /* Upper output limit (Iq) */
 
-real32_T Speed_Ref_ADRC;        /* Speed reference in Hz */
-real32_T Speed_Fdk_ADRC;        /* Speed feedback in rad/s */
-real32_T Speed_Adrc_Out;        /* ADRC output -> Iq reference */
+/* Reuse PID variable names since only one controller is active at a time */
+real32_T Speed_Ref;             /* Speed reference in Hz (shared with PID) */
+real32_T Speed_Fdk;             /* Speed feedback in rad/s (shared with PID) */
+real32_T Speed_Pid_Out;         /* Controller output -> Iq reference (shared with PID) */
 
-SPEED_ADRC_DEF Speed_Adrc;
+SPEED_ADRC_DEF Speed_Pid;       /* ADRC controller instance (shared name with PID) */
 
 /**
  * @brief Initialize Speed Linear ADRC Controller
@@ -56,25 +57,25 @@ void speed_adrc_initialize(void)
     real32_T wc = SPEED_ADRC_WC;
     
     /* ESO gains based on observer bandwidth */
-    Speed_Adrc.eso.beta1 = 3.0f * wo;
-    Speed_Adrc.eso.beta2 = 3.0f * wo * wo;
-    Speed_Adrc.eso.beta3 = wo * wo * wo;
+    Speed_Pid.eso.beta1 = 3.0f * wo;
+    Speed_Pid.eso.beta2 = 3.0f * wo * wo;
+    Speed_Pid.eso.beta3 = wo * wo * wo;
     
     /* System gain estimate */
-    Speed_Adrc.eso.b0 = SPEED_ADRC_B0;
+    Speed_Pid.eso.b0 = SPEED_ADRC_B0;
     
     /* Controller gains based on controller bandwidth */
-    Speed_Adrc.kp = wc * wc;
-    Speed_Adrc.kd = 2.0f * wc;
+    Speed_Pid.kp = wc * wc;
+    Speed_Pid.kd = 2.0f * wc;
     
     /* Output limits */
-    Speed_Adrc.Max_Output = SPEED_ADRC_UP_LIMIT;
-    Speed_Adrc.Min_Output = SPEED_ADRC_LOW_LIMIT;
+    Speed_Pid.Max_Output = SPEED_ADRC_UP_LIMIT;
+    Speed_Pid.Min_Output = SPEED_ADRC_LOW_LIMIT;
     
     /* Initialize ESO states */
-    Speed_Adrc.eso.z1 = 0.0f;
-    Speed_Adrc.eso.z2 = 0.0f;
-    Speed_Adrc.eso.z3 = 0.0f;
+    Speed_Pid.eso.z1 = 0.0f;
+    Speed_Pid.eso.z2 = 0.0f;
+    Speed_Pid.eso.z3 = 0.0f;
 }
 
 /**
@@ -107,7 +108,7 @@ void speed_adrc_initialize(void)
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-void Speed_Adrc_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp)
+void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp)
 {
     real32_T speed_ref_rad;
     real32_T e;             /* Observation error */

@@ -57,12 +57,12 @@ typedef struct
     real32_T Min_Output;    /* Lower output limit (min Iq) */
 } SPEED_ADRC_DEF;
 
-/* Global ADRC controller variables */
-extern real32_T Speed_Ref_ADRC;      /* Speed reference in Hz */
-extern real32_T Speed_Fdk_ADRC;      /* Speed feedback in rad/s */
-extern real32_T Speed_Adrc_Out;      /* ADRC output -> Iq reference for torque control */
+/* Global ADRC controller variables - reuse PID variable names since only one is active */
+extern real32_T Speed_Ref;           /* Speed reference in Hz (shared with PID) */
+extern real32_T Speed_Fdk;           /* Speed feedback in rad/s (shared with PID) */
+extern real32_T Speed_Pid_Out;       /* Controller output -> Iq reference (shared with PID) */
 
-extern SPEED_ADRC_DEF Speed_Adrc;
+extern SPEED_ADRC_DEF Speed_Pid;     /* ADRC controller instance (shared name with PID) */
 
 /* ADRC controller parameters (tunable) */
 extern real32_T SPEED_ADRC_WO;           /* Observer bandwidth (rad/s) */
@@ -101,11 +101,14 @@ extern void speed_adrc_initialize(void);
  * - Better load disturbance rejection
  * - Faster transient response with less overshoot
  * 
+ * NOTE: Uses same variable names as PID (Speed_Ref, Speed_Fdk, Speed_Pid_Out)
+ * since only one controller is active at a time.
+ * 
  * @param ref_temp Speed reference in Hz
  * @param fdb_temp Speed feedback in rad/s (from encoder or observer)
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-extern void Speed_Adrc_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp);
+extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_ADRC_DEF* current_adrc_temp);
 
 #endif  /* RTW_HEADER_speed_adrc_h_ */

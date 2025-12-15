@@ -5,15 +5,6 @@
 #include "main.h"
 #include "low_task.h"
 #include "adc.h"
-#include "foc_define_parameter.h"
-
-/* Include appropriate speed controller based on configuration */
-#ifdef USE_SPEED_ADRC
-#include "speed_adrc.h"
-#else
-/* Default to PID if no controller is explicitly selected */
-#include "speed_pid.h"
-#endif
 
 uint16_t hz_100_cnt = 0;
 uint8_t motor_start_stop = 0;
@@ -32,17 +23,7 @@ void motor_start(void)
 {
 	GPIO_SetBits(GPIOC, GPIO_Pin_9);
 	foc_algorithm_initialize();
-	
-	/* Initialize speed controller and set initial reference */
-#ifdef USE_SPEED_ADRC
-	speed_adrc_initialize();
-	Speed_Ref_ADRC = motor_direction * 25.0F;	/* Initial startup speed */
-	Speed_Adrc_Out = 0.0f;
-#else
-	/* PID initialization is done in foc_algorithm_initialize() */
-	Speed_Ref = motor_direction * 25.0F;		/* Initial startup speed */
-#endif
-	
+	Speed_Ref = motor_direction * 25.0F;	/* Initial startup speed */
 	speed_close_loop_flag = 0;				/* Start with open-loop current control */
 	Iq_ref = 0.0f;
 
@@ -136,22 +117,6 @@ void lowfreq_control_task(void)
 	if (key2_flag == 1)
 	{
 		display_flag = 1;  /* Display running parameters */
-#ifdef USE_SPEED_ADRC
-		if (motor_direction != -1.0f)
-		{
-			if (Speed_Ref_ADRC > 25.0f)  /* Minimum speed: 25 Hz */
-			{
-				Speed_Ref_ADRC -= 5.0f;  /* Step size: 5 Hz */
-			}
-		}
-		else
-		{
-			if (Speed_Ref_ADRC < -25.0f)  /* Minimum speed (reverse): -25 Hz */
-			{
-				Speed_Ref_ADRC += 5.0f;  /* Step size: 5 Hz */
-			}
-		}
-#else
 		if (motor_direction != -1.0f)
 		{
 			if (Speed_Ref > 25.0f)  /* Minimum speed: 25 Hz */
@@ -166,31 +131,12 @@ void lowfreq_control_task(void)
 				Speed_Ref += 5.0f;  /* Step size: 5 Hz */
 			}
 		}
-#endif
 		key2_flag = 0;
 	}
 
 	/* Key3: Increase speed reference */
 	if (key3_flag == 1)
 	{
-#ifdef USE_SPEED_ADRC
-		if (motor_direction != -1.0f)
-		{
-			Speed_Ref_ADRC += 5.0f;  /* Step size: 5 Hz */
-			if (Speed_Ref_ADRC > 200.0f)  /* Maximum speed: 200 Hz */
-			{
-				Speed_Ref_ADRC = 200.0f;
-			}
-		}
-		else
-		{
-			Speed_Ref_ADRC -= 5.0f;  /* Step size: 5 Hz */
-			if (Speed_Ref_ADRC < -200.0f)  /* Maximum speed (reverse): -200 Hz */
-			{
-				Speed_Ref_ADRC = -200.0f;
-			}
-		}
-#else
 		if (motor_direction != -1.0f)
 		{
 			Speed_Ref += 5.0f;  /* Step size: 5 Hz */
@@ -207,7 +153,6 @@ void lowfreq_control_task(void)
 				Speed_Ref = -200.0f;
 			}
 		}
-#endif
 		key3_flag = 0;
 	}
 }
@@ -232,14 +177,8 @@ void low_task_c_systick_sub(void)
 		drv8301_protection();
 	}
 
-	/* Execute speed controller at 1kHz */
-#ifdef USE_SPEED_ADRC
-	/* Linear ADRC speed controller */
-	Speed_Adrc_Calc(Speed_Ref, Speed_Fdk, &Speed_Adrc_Out, &Speed_Adrc);
-#else
-	/* Traditional PID speed controller */
+	/* Execute speed controller at 1kHz (PID or ADRC based on configuration) */
 	Speed_Pid_Calc(Speed_Ref, Speed_Fdk, &Speed_Pid_Out, &Speed_Pid);
-#endif
 
 	/* Divide down to 100Hz for low priority tasks */
 	hz_100_cnt++;
