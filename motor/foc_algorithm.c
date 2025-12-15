@@ -525,11 +525,7 @@ void foc_algorithm_initialize(void)
 	}
 
 	/* Initialize speed loop controller (PID or ADRC based on configuration) */
-#ifdef USE_SPEED_ADRC
-	speed_adrc_initialize();
-#else
-	speed_pid_initialize();
-#endif
+	speed_controller_init();
 
 	/* Initialize Extended Kalman Filter for position/speed estimation */
 	stm32_ekf_Start_wrapper(&FOC_Interface_states.EKF_States[0]);

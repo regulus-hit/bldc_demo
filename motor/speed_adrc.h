@@ -74,7 +74,7 @@ extern real32_T SPEED_ADRC_LOW_LIMIT;    /* Lower output limit */
 extern real32_T SPEED_ADRC_UP_LIMIT;     /* Upper output limit */
 
 /**
- * @brief Initialize Speed Linear ADRC Controller
+ * @brief Initialize Speed Controller (ADRC Implementation)
  * 
  * Sets up ADRC gains and limits based on bandwidth parameters.
  * Must be called before motor startup.
@@ -84,8 +84,9 @@ extern real32_T SPEED_ADRC_UP_LIMIT;     /* Upper output limit */
  * - Controller gains: kp = wc^2, kd = 2*wc
  * 
  * where wo is observer bandwidth and wc is controller bandwidth.
+ * Generic initialization function for speed control.
  */
-extern void speed_adrc_initialize(void);
+extern void speed_controller_init(void);
 
 /**
  * @brief Speed Linear ADRC Controller Calculation
@@ -111,6 +112,6 @@ extern void speed_adrc_initialize(void);
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp);
+extern void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp);
 
 #endif  /* RTW_HEADER_speed_adrc_h_ */

@@ -46,25 +46,28 @@ typedef struct
 extern SPEED_PID_DEF Speed_Pid;
 
 /**
- * @brief Initialize Speed PI Controller
+ * @brief Initialize Speed Controller
  * 
- * Sets up PI gains and limits, clears integral state.
+ * Sets up controller gains and limits, clears state variables.
+ * Generic initialization function for speed control (PID implementation).
  */
-extern void speed_pid_initialize(void);
+extern void speed_controller_init(void);
 
 /**
- * @brief Speed PI Controller Calculation
+ * @brief Speed Controller Calculation
  * 
  * Outer loop controller for speed regulation. Generates torque current
  * reference (Iq_ref) based on speed error. Typically runs at lower
  * frequency than current loop (e.g., 1kHz vs 10kHz).
+ * 
+ * Generic interface for speed control (PID implementation).
  * 
  * @param ref_temp Speed reference in Hz
  * @param fdb_temp Speed feedback in rad/s
  * @param out_temp Output: Iq current reference
  * @param current_pid_temp PI controller state structure
  */
-extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_pid_temp);
+extern void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_pid_temp);
 
 extern real32_T SPEED_PI_I;
 extern real32_T SPEED_PI_KB;

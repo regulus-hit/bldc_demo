@@ -32,7 +32,7 @@ real32_T Speed_Pid_Out;         /* Controller output -> Iq reference (shared wit
 SPEED_PID_DEF Speed_Pid;        /* ADRC controller instance (shared name with PID) */
 
 /**
- * @brief Initialize Speed Linear ADRC Controller
+ * @brief Initialize Speed Controller (ADRC Implementation)
  * 
  * Calculates observer and controller gains based on bandwidth parameters.
  * Uses standard bandwidth-parameterization approach (Gao, 2003).
@@ -50,7 +50,7 @@ SPEED_PID_DEF Speed_Pid;        /* ADRC controller instance (shared name with PI
  * - Observer poles at -wo (fast disturbance estimation)
  * - Controller poles optimally placed for step response
  */
-void speed_adrc_initialize(void)
+void speed_controller_init(void)
 {
     real32_T wo = SPEED_ADRC_WO;
     real32_T wc = SPEED_ADRC_WC;
@@ -78,7 +78,7 @@ void speed_adrc_initialize(void)
 }
 
 /**
- * @brief Speed Linear ADRC Controller Calculation
+ * @brief Speed Controller Calculation (ADRC Implementation)
  * 
  * Implements complete Linear ADRC algorithm:
  * 
@@ -107,7 +107,7 @@ void speed_adrc_initialize(void)
  * @param out_temp Output: Iq current reference in Amperes
  * @param current_adrc_temp ADRC controller state structure
  */
-void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp)
+void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_adrc_temp)
 {
     real32_T speed_ref_rad;
     real32_T e;             /* Observation error */
