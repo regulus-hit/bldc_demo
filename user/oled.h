@@ -16,7 +16,7 @@
  		     
 #define OLED_CMD  0	//写命令
 #define OLED_DATA 1	//写数据
-#define SIZE 16
+#define OLED_FONTSIZE 8
 #define Max_Column	128
 #define Max_Row		64
 

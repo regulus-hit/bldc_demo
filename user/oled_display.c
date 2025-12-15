@@ -37,8 +37,10 @@ void oled_display_handle(void)
 			if(clear_display_flag==0)
 			{
 				OLED_Clear();
-				OLED_ShowString(0,2,"hall_f:");
-				OLED_ShowString(0,4,"ekf_f:");
+				OLED_ShowString(0,2,"r_ref:");
+				OLED_ShowString(0,3,"r_fbk:");
+				OLED_ShowString(0,4,"hall_f:");
+				OLED_ShowString(0,5,"ekf_f:");
 				OLED_ShowString(0,6,"Iq_ref: .");
 				clear_display_flag=1;
 			}
@@ -54,12 +56,12 @@ void oled_display_handle(void)
 				}
 				motor_run_display_flag_pre = motor_run_display_flag;
 			}
-			
-			OLED_ShowNum(7*8,2,(uint32_t)hall_speed,3,16);
-			
-			OLED_ShowNum(7*8,4,(uint32_t)EKF_Hz,3,16);
-			
-			
+
+			OLED_ShowNum(7*8,2,(uint32_t)Speed_Ref,3,16);
+			OLED_ShowNum(7*8,3,(uint32_t)Speed_Fdk,3,16);
+			OLED_ShowNum(7*8,4,(uint32_t)hall_speed,3,16);
+			OLED_ShowNum(7*8,5,(uint32_t)EKF_Hz,3,16);
+
 			
 			OLED_ShowNum(7*8,6,(uint32_t)FOC_Input.Iq_ref,1,16);
 			OLED_ShowNum(9*8,6,(uint32_t)(FOC_Input.Iq_ref*100),2,16);

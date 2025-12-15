@@ -445,7 +445,7 @@ void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t chr)
 		y = y + 2;
 	}
 	
-	if (SIZE == 16)  /* 8x16 font (2 pages tall) */
+	if (OLED_FONTSIZE == 16)  /* 8x16 font (2 pages tall) */
 	{
 		/* Draw top half of character */
 		OLED_Set_Pos(x, y);
