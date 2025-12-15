@@ -118,14 +118,37 @@ struct tag_RTM {
 
 extern FOC_INTERFACE_STATES_DEF FOC_Interface_states;
 
-
 extern FOC_INPUT_DEF FOC_Input;
-
 
 extern FOC_OUTPUT_DEF FOC_Output;
 
-
+/**
+ * @brief Initialize FOC algorithm and all sub-components
+ * 
+ * Initializes:
+ * - Current loop PI controllers (D-axis and Q-axis)
+ * - Speed loop PI controller
+ * - Extended Kalman Filter for sensorless position estimation
+ * - Motor parameter identification algorithms
+ * 
+ * Must be called once before motor operation starts.
+ */
 extern void foc_algorithm_initialize(void);
+
+/**
+ * @brief Execute one complete FOC control cycle
+ * 
+ * Performs all FOC calculations in sequence:
+ * - Clarke transform (abc -> alpha-beta frame)
+ * - Park transform (alpha-beta -> dq frame)
+ * - Current PI control in dq frame
+ * - Inverse Park transform (dq -> alpha-beta frame)
+ * - Space Vector PWM calculation
+ * - EKF state observer update
+ * - Motor parameter estimation
+ * 
+ * Should be called at PWM frequency (typically 10-20 kHz).
+ */
 extern void foc_algorithm_step(void);
 
 
