@@ -50,11 +50,16 @@ void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SP
 	temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
 
 	/* Output limiting */
-	if (temp > current_pid_temp->Max_Output) {
+	if (temp > current_pid_temp->Max_Output)
+	{
 		*out_temp = current_pid_temp->Max_Output;
-	} else if (temp < current_pid_temp->Min_Output) {
+	}
+	else if (temp < current_pid_temp->Min_Output)
+	{
 		*out_temp = current_pid_temp->Min_Output;
-	} else {
+	}
+	else
+	{
 		*out_temp = temp;
 	}
 
