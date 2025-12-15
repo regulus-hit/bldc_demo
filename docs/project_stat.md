@@ -9,6 +9,7 @@
 1. Refer to other successful BLDC FOC projects(ST Motor Control SDK, TI MotorWare, SimpleFOC etc.);
 2. Always follow embedded C best practices;
 3. Always remember to generate documents for future reference, and update docs/project_stat.md after bugfix or implementation.
+4. Always update CHANGELOG.md, if commits are minor, then only change the PATCH version.
 
 ---
 
