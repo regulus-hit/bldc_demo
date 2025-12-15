@@ -542,22 +542,28 @@ void stm32_ekf_Update_wrapper(const real32_T *u,
 	P_pred_3_3 = f2_3_2 * P0_2_3 + f2_3_3 * P0_3_3;
 
 	/* Second multiplication: P_pred = temp * F^T + Q */
+	/* Save values that will be overwritten before they're needed */
+	float P_pred_0_2_saved = P_pred_0_2;
+	float P_pred_1_2_saved = P_pred_1_2;
+	float P_pred_2_2_saved = P_pred_2_2;
+	float P_pred_3_2_saved = P_pred_3_2;
+	
 	P_pred_0_0 = P_pred_0_0 * f2_0_0 + P_pred_0_2 * f2_0_2 + P_pred_0_3 * f2_0_3 + Q_0_0;
 	P_pred_0_1 = P_pred_0_1 * f2_1_1 + P_pred_0_2 * f2_1_2 + P_pred_0_3 * f2_1_3;
-	P_pred_0_2 = P_pred_0_2 * f2_2_2;
-	P_pred_0_3 = P_pred_0_2 * f2_3_2 + P_pred_0_3 * f2_3_3;
+	P_pred_0_2 = P_pred_0_2_saved * f2_2_2;
+	P_pred_0_3 = P_pred_0_2_saved * f2_3_2 + P_pred_0_3 * f2_3_3;
 	P_pred_1_0 = P_pred_1_0 * f2_0_0 + P_pred_1_2 * f2_0_2 + P_pred_1_3 * f2_0_3;
 	P_pred_1_1 = P_pred_1_1 * f2_1_1 + P_pred_1_2 * f2_1_2 + P_pred_1_3 * f2_1_3 + Q_1_1;
-	P_pred_1_2 = P_pred_1_2 * f2_2_2;
-	P_pred_1_3 = P_pred_1_2 * f2_3_2 + P_pred_1_3 * f2_3_3;
+	P_pred_1_2 = P_pred_1_2_saved * f2_2_2;
+	P_pred_1_3 = P_pred_1_2_saved * f2_3_2 + P_pred_1_3 * f2_3_3;
 	P_pred_2_0 = P_pred_2_0 * f2_0_0 + P_pred_2_2 * f2_0_2 + P_pred_2_3 * f2_0_3;
 	P_pred_2_1 = P_pred_2_1 * f2_1_1 + P_pred_2_2 * f2_1_2 + P_pred_2_3 * f2_1_3;
-	P_pred_2_2 = P_pred_2_2 * f2_2_2 + Q_2_2;
-	P_pred_2_3 = P_pred_2_2 * f2_3_2 + P_pred_2_3 * f2_3_3;
+	P_pred_2_2 = P_pred_2_2_saved * f2_2_2 + Q_2_2;
+	P_pred_2_3 = P_pred_2_2_saved * f2_3_2 + P_pred_2_3 * f2_3_3;
 	P_pred_3_0 = P_pred_3_0 * f2_0_0 + P_pred_3_2 * f2_0_2 + P_pred_3_3 * f2_0_3;
 	P_pred_3_1 = P_pred_3_1 * f2_1_1 + P_pred_3_2 * f2_1_2 + P_pred_3_3 * f2_1_3;
-	P_pred_3_2 = P_pred_3_2 * f2_2_2;
-	P_pred_3_3 = P_pred_3_2 * f2_3_2 + P_pred_3_3 * f2_3_3 + Q_3_3;
+	P_pred_3_2 = P_pred_3_2_saved * f2_2_2;
+	P_pred_3_3 = P_pred_3_2_saved * f2_3_2 + P_pred_3_3 * f2_3_3 + Q_3_3;
 
 	/* 
 	 * Step 6: Compute Innovation Covariance S = H * P_pred * H^T + R
