@@ -468,7 +468,8 @@ void foc_algorithm_step(void)
 	                  &D_PI_P, &D_PI_I, &D_PI_KB);
 	
 	/* Apply same gains to Q-axis (symmetric for SPMSM) */
-	if (pid_autotune_is_complete() && D_PI_P != Q_PI_P) {
+	/* For Surface-Mounted PMSM, Ld = Lq, so D and Q axes use same gains */
+	if (pid_autotune_is_complete()) {
 		Q_PI_P = D_PI_P;
 		Q_PI_I = D_PI_I;
 		Q_PI_KB = D_PI_KB;

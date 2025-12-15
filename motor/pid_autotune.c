@@ -30,8 +30,11 @@
 #define STABLE_TIME_MS                  2000        /* 2 seconds stability wait */
 #define MAX_TUNE_TIME_MS                10000       /* 10 seconds maximum tuning time */
 
-/* Control period (10 kHz control loop = 0.1 ms period) */
-#define CONTROL_PERIOD_S                0.0001f
+/* Mathematical constants */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
+#define TWO_PI (2.0f * M_PI)
 
 /* Parameter validation thresholds */
 #define MIN_VALID_RESISTANCE            0.01f       /* 10 mΩ minimum */
@@ -345,14 +348,14 @@ static void calculate_pi_gains(real32_T Rs, real32_T Ls, real32_T bandwidth_hz)
     real32_T effective_bandwidth;
     
     /* Convert bandwidth to rad/s */
-    bandwidth_rad_s = 2.0f * 3.14159265f * bandwidth_hz;
+    bandwidth_rad_s = TWO_PI * bandwidth_hz;
     
     /* Apply safety margin */
     effective_bandwidth = bandwidth_rad_s * PID_Autotune.safety_margin;
     
     /* Clamp bandwidth to safe range */
-    real32_T min_bw_rad = 2.0f * 3.14159265f * PID_Autotune.min_bandwidth_hz;
-    real32_T max_bw_rad = 2.0f * 3.14159265f * PID_Autotune.max_bandwidth_hz;
+    real32_T min_bw_rad = TWO_PI * PID_Autotune.min_bandwidth_hz;
+    real32_T max_bw_rad = TWO_PI * PID_Autotune.max_bandwidth_hz;
     
     if (effective_bandwidth < min_bw_rad) {
         effective_bandwidth = min_bw_rad;
@@ -380,9 +383,15 @@ static void calculate_pi_gains(real32_T Rs, real32_T Ls, real32_T bandwidth_hz)
 /**
  * @brief Get system time in milliseconds
  * 
- * This is a placeholder. In actual implementation, this should return
- * the system tick count in milliseconds from a hardware timer.
- */
+
+ * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
+ *
+
+ * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
+ *
+
+ * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
+ *
 static uint32_t get_system_time_ms(void)
 {
     /* TODO: Replace with actual system timer */

@@ -709,6 +709,11 @@
               <FilePath>..\motor\R_flux_identification_wrapper.c</FilePath>
             </File>
             <File>
+              <FileName>pid_autotune.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\motor\pid_autotune.c</FilePath>
+            </File>
+            <File>
               <FileName>speed_pid.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\motor\speed_pid.c</FilePath>
