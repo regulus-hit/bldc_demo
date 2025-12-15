@@ -81,15 +81,15 @@ void get_offset(uint32_t *a_offset, uint32_t *b_offset)
 		/* Average the accumulated samples (divide by 128 = right shift 7) */
 		*a_offset >>= 7;
 		*b_offset >>= 7;
-		
+#ifdef ADC_OFFSET_CHECK
 		/* Validate offset values - should be near mid-scale (2048 for 12-bit ADC) */
 		/* Allow ±200 counts tolerance for op-amp offset and ADC accuracy */
 		if ((*a_offset > 2048 + 200) || (*a_offset < 2048 - 200) ||
 		    (*b_offset > 2048 + 200) || (*b_offset < 2048 - 200))
 		{
 			/* Offset out of range - retry calibration */
-			*a_offset = 0;
-			*b_offset = 0;
+			*a_offset = 2048;
+			*b_offset = 2048;
 			get_offset_sample_cnt = 0;
 			/* Keep get_offset_flag at 1 to retry */
 		}
@@ -100,6 +100,11 @@ void get_offset(uint32_t *a_offset, uint32_t *b_offset)
 			TIM_CtrlPWMOutputs(PWM_TIM, DISABLE);
 			get_offset_flag = 2;
 		}
+#else
+		get_offset_sample_cnt = 0;
+		TIM_CtrlPWMOutputs(PWM_TIM, DISABLE);
+		get_offset_flag = 2;
+#endif
 	}
 }
 

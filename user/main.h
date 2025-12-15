@@ -62,6 +62,7 @@
 #define MATH_cos_60		0.500F
 
 #define COPILOT_BUGFIX
+#define ADC_OFFSET_CHECK
 
 /* PI macro for compatibility with existing code */
 #ifndef PI
