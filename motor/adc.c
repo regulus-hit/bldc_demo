@@ -286,7 +286,7 @@ void motor_run(void)
  * This is the highest priority interrupt in the system as it drives FOC control.
  * Timing is synchronized with PWM to sample currents at optimal point in cycle.
  */
-void ADC_IRQHandler(void)
+void adc_c_adc_sub(void)
 {
 	if ((SAMPLE_ADC->SR & ADC_FLAG_JEOC) == ADC_FLAG_JEOC)
 	{
@@ -382,7 +382,7 @@ void send_PC(float wave1, float wave2, float wave3, float wave4)
  * Called when UART TX DMA transfer completes.
  * Cleans up DMA and allows next transmission.
  */
-void DMA1_Stream6_IRQHandler(void)
+void adc_c_dma1_stream6_sub(void)
 {
 	if (DMA_GetITStatus(DMA1_Stream6, DMA_IT_TCIF6))
 	{

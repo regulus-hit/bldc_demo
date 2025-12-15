@@ -18,4 +18,6 @@ extern float hall_angle;		/* Rotor angle from Hall sensors */
 extern float hall_angle_add;	/* Angle increment per sample */
 extern float hall_speed;		/* Rotor speed from Hall sensors */
 
+void hall_sensor_c_tim2_sub(void);
+
 #endif

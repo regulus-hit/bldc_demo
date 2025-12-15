@@ -136,34 +136,6 @@ void PendSV_Handler(void)
 {
 }
 
-/**
-* @brief  This function handles SysTick Handler.
-* @param  None
-* @retval None
-*/
-
-/**
- * @brief TIM1 Update/TIM10 Interrupt Handler
- * 
- * Handles PWM timer update events. Currently only clears the flag.
- * Could be used for PWM cycle synchronization or debugging.
- */
-void TIM1_UP_TIM10_IRQHandler(void)
-{
-	TIM_ClearFlag(PWM_TIM, TIM_FLAG_Update);
-}
-
-/**
- * @brief USB OTG Full Speed Interrupt Handler
- * 
- * Handles USB communication events for PC interface.
- * Delegates to USB device library interrupt service routine.
- */
-void OTG_FS_IRQHandler(void)
-{
-	USBD_OTG_ISR_Handler(&USB_OTG_dev);
-}
-
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

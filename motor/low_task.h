@@ -20,4 +20,6 @@ void motor_start(void);
  */
 void motor_stop(void);
 
+void low_task_c_systick_sub(void);
+
 #endif

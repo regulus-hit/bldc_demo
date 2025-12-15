@@ -20,7 +20,7 @@ float hall_speed;
  * The three Hall sensors (A, B, C) create 6 distinct states per electrical cycle,
  * allowing 60-degree resolution position sensing.
  */
-void TIM2_IRQHandler(void)
+void hall_sensor_c_tim2_sub(void)
 {
 	float temp;
 	if (TIM_GetFlagStatus(HALL_TIM, TIM_FLAG_CC1) == SET)

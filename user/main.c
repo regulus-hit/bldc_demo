@@ -58,6 +58,52 @@ int main(void)
 	}
 }
 
+/**
+* @brief  This function handles SysTick Handler.
+* @param  None
+* @retval None
+*/
+void SysTick_Handler(void)
+{
+	low_task_c_systick_sub();
+}
+
+/**
+ * @brief TIM1 Update/TIM10 Interrupt Handler
+ * 
+ * Handles PWM timer update events. Currently only clears the flag.
+ * Could be used for PWM cycle synchronization or debugging.
+ */
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+	TIM_ClearFlag(PWM_TIM, TIM_FLAG_Update);
+}
+
+void TIM2_IRQHandler(void)
+{
+	hall_sensor_c_tim2_sub();
+}
+
+void ADC_IRQHandler(void)
+{
+	adc_c_adc_sub();
+}
+
+void DMA1_Stream6_IRQHandler(void)
+{
+	adc_c_dma1_stream6_sub();
+}
+
+/**
+ * @brief USB OTG Full Speed Interrupt Handler
+ * 
+ * Handles USB communication events for PC interface.
+ * Delegates to USB device library interrupt service routine.
+ */
+void OTG_FS_IRQHandler(void)
+{
+	USBD_OTG_ISR_Handler(&USB_OTG_dev);
+}
 
 /**
  * @brief Delay function using SysTick

@@ -169,7 +169,7 @@ void lowfreq_control_task(void)
  * 
  * This is the main task scheduler for non-real-time control functions.
  */
-void SysTick_Handler(void)
+void low_task_c_systick_sub(void)
 {
 	/* Monitor DRV8301 gate driver for faults */
 	if (drv8301_init_ok_flag == 1)

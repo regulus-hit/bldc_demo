@@ -25,4 +25,7 @@ extern uint8_t speed_close_loop_flag;
 extern uint16_t ADC1ConvertedValue[5];
 extern float motor_direction;
 
+void adc_c_adc_sub(void);
+void adc_c_dma1_stream6_sub(void);
+
 #endif

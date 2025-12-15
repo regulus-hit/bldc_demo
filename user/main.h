@@ -65,6 +65,11 @@ typedef enum
 	FALSE = 0, TRUE  = !FALSE
 }
 bool;
+
+void SysTick_Handler(void);
+void TIM1_UP_TIM10_IRQHandler(void);
+void OTG_FS_IRQHandler(void);
+
 void TimingDelay_Decrement(void);
 extern void Delay(__IO uint32_t nTime);
 
