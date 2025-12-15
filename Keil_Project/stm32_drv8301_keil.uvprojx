@@ -689,6 +689,11 @@
               <FilePath>..\motor\hall_sensor.c</FilePath>
             </File>
             <File>
+              <FileName>hybrid_observer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\motor\hybrid_observer.c</FilePath>
+            </File>
+            <File>
               <FileName>L_identification_wrapper.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\motor\L_identification_wrapper.c</FilePath>
