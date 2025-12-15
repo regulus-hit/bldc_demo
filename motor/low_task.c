@@ -147,7 +147,7 @@ void low_control_task(void)
 		}
 		else
 		{
-			Speed_Ref -= 4.0f;  /* Step size: 4 Hz */
+			Speed_Ref -= 5.0f;  /* Step size: 5 Hz */
 			if (Speed_Ref < -200.0f)  /* Maximum speed (reverse): -200 Hz */
 			{
 				Speed_Ref = -200.0f;
