@@ -4,6 +4,10 @@
 #include "main.h"
 #include "pc_communication_init.h"
 
+#ifdef ENABLE_PID_AUTOTUNE
+#include "pid_autotune.h"
+#endif
+
 int32_t int_test1 = 1;
 int32_t int_test2 = 2;
 int32_t int_test3 = 3;
@@ -40,6 +44,11 @@ extern int32_t ia_test,ib_test,ic_test;
 extern float theta_add;
 extern float Ia_test,Ib_test,Ic_test;
 
+#ifdef ENABLE_PID_AUTOTUNE
+/* External references for PID auto-tuning telemetry */
+extern PID_AUTOTUNE_DEF PID_Autotune;
+#endif
+
 void pc_communication_init(void)
 {
 	communication_init();
@@ -73,6 +82,16 @@ void pc_communication_init(void)
 	int_data_upload_init(7,0x06,&int_test8);
 	int_data_upload_init(8,0x06,&int_test9);
 	int_data_upload_init(9,0x06,&int_test10);
+	
+#ifdef ENABLE_PID_AUTOTUNE
+	/* PID auto-tuning telemetry - Use remaining slots for monitoring */
+	/* Upload calculated gains for verification */
+	/* Note: Use existing float_test slots or add new ones if needed */
+	float_test6 = 0.0f;  /* Will hold Kp_calculated */
+	float_test7 = 0.0f;  /* Will hold Ki_calculated */
+	float_test8 = 0.0f;  /* Will hold Kb_calculated */
+	/* Note: These are updated in pid_autotune_step() if needed */
+#endif
 	
 	float_data_download_init(0,&SPEED_PI_P);
 	float_data_download_init(1,&SPEED_PI_I);

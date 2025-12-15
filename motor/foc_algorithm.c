@@ -10,6 +10,10 @@
 #include "hybrid_observer.h"
 #endif
 
+#ifdef ENABLE_PID_AUTOTUNE
+#include "pid_autotune.h"
+#endif
+
 /* D-axis current PI controller parameters */
 real32_T D_PI_I = 1282.8F;
 real32_T D_PI_KB = 15.0F;
@@ -454,6 +458,22 @@ void foc_algorithm_step(void)
 	FOC_Output.L_RF[0] = FOC_Interface_states.L_Ident_Output;
 	FOC_Output.L_RF[1] = FOC_Interface_states.R_flux_Ident_Output[0];
 	FOC_Output.L_RF[2] = FOC_Interface_states.R_flux_Ident_Output[1];
+
+#ifdef ENABLE_PID_AUTOTUNE
+	/* Step 9: PID Auto-Tuning - Automatically optimize current loop gains */
+	/* Uses identified R and L to calculate optimal Kp, Ki, Kb */
+	/* Note: Auto-tune for D-axis and Q-axis separately if needed */
+	/* For now, we tune both axes with same gains (typical for SPMSM) */
+	pid_autotune_step(FOC_Output.L_RF[1], FOC_Output.L_RF[0],
+	                  &D_PI_P, &D_PI_I, &D_PI_KB);
+	
+	/* Apply same gains to Q-axis (symmetric for SPMSM) */
+	if (pid_autotune_is_complete() && D_PI_P != Q_PI_P) {
+		Q_PI_P = D_PI_P;
+		Q_PI_I = D_PI_I;
+		Q_PI_KB = D_PI_KB;
+	}
+#endif
 }
 
 
@@ -499,6 +519,11 @@ void foc_algorithm_initialize(void)
 	L_identification_Start_wrapper(&FOC_Interface_states.L_Ident_States);
 	R_flux_identification_Start_wrapper(&FOC_Interface_states.R_flux_Ident_States);
 
+#ifdef ENABLE_PID_AUTOTUNE
+	/* Initialize PID auto-tuning module */
+	pid_autotune_init();
+#endif
+
 	/* Initialize EKF state variables */
 	{
 		real_T initVector[4] = { 0, 0, 0, 0 };
@@ -541,4 +566,30 @@ void foc_algorithm_initialize(void)
 	hybrid_observer_initialize();
 #endif
 }
+
+#ifdef ENABLE_PID_AUTOTUNE
+/**
+ * @brief Start PID auto-tuning for current loop controllers
+ */
+uint8_t foc_start_pid_autotune(void)
+{
+	return pid_autotune_start();
+}
+
+/**
+ * @brief Stop PID auto-tuning
+ */
+void foc_stop_pid_autotune(void)
+{
+	pid_autotune_stop();
+}
+
+/**
+ * @brief Get PID auto-tune status
+ */
+uint8_t foc_get_autotune_status(void)
+{
+	return (uint8_t)pid_autotune_get_state();
+}
+#endif
 
