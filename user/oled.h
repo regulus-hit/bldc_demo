@@ -1,4 +1,5 @@
 #ifndef __OLED_H_
+#include <stdint.h>
 #define __OLED_H_
 
 
@@ -22,17 +23,17 @@
 #define Max_Column	128
 #define Max_Row		64
 
-extern s8 display_data_buff[128];
-extern u8 display_data_buff_cnt;
-extern u8 display_data_flag;
+extern int8_t display_data_buff[128];
+extern uint8_t display_data_buff_cnt;
+extern uint8_t display_data_flag;
 extern void OLED_Init(void);
 extern void OLED_Clear(void);
 extern void oled_display(void);
 extern void OLED_DrawBMP(unsigned char x0, unsigned char y0,unsigned char x1, unsigned char y1,unsigned char BMP[]);
-extern void OLED_ShowCHinese(u8 x,u8 y,u8 no);
-extern void OLED_ShowCHinese_32(u8 x,u8 y,u8 no);
-extern void OLED_ShowChar_32(u8 x,u8 y,u8 chr);
-extern void OLED_ShowString(u8 x,u8 y,u8 *chr);
-extern void OLED_ShowNum(u8 x,u8 y,u32 num,u8 len,u8 size);
+extern void OLED_ShowCHinese(uint8_t x,uint8_t y,uint8_t no);
+extern void OLED_ShowCHinese_32(uint8_t x,uint8_t y,uint8_t no);
+extern void OLED_ShowChar_32(uint8_t x,uint8_t y,uint8_t chr);
+extern void OLED_ShowString(uint8_t x,uint8_t y,uint8_t *chr);
+extern void OLED_ShowNum(uint8_t x,uint8_t y,uint32_t num,uint8_t len,uint8_t size);
 
 #endif

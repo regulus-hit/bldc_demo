@@ -1,18 +1,19 @@
 #ifndef __PC_COMMUNICATION_INIT_H_
+#include <stdint.h>
 #define __PC_COMMUNICATION_INIT_H_
 
 
 
-extern s32 int_test1;
-extern s32 int_test2;
-extern s32 int_test3;
-extern s32 int_test4;
-extern s32 int_test5;
-extern s32 int_test6;
-extern s32 int_test7;
-extern s32 int_test8;
-extern s32 int_test9;
-extern s32 int_test10;
+extern int32_t int_test1;
+extern int32_t int_test2;
+extern int32_t int_test3;
+extern int32_t int_test4;
+extern int32_t int_test5;
+extern int32_t int_test6;
+extern int32_t int_test7;
+extern int32_t int_test8;
+extern int32_t int_test9;
+extern int32_t int_test10;
 extern float float_test1;
 extern float float_test2;
 extern float float_test3;

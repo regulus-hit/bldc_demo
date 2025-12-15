@@ -1,6 +1,8 @@
 #ifndef __DRV8301_H_
 #define __DRV8301_H_
 
+#include <stdint.h>
+
 
 #define DRV8301_REG0    0
 #define DRV8301_REG1    1
@@ -93,9 +95,30 @@
 
 
 
-extern u8 drv8301_init_ok_flag;
+extern uint8_t drv8301_init_ok_flag;
+
+/**
+ * @brief Initialize DRV8301 motor driver chip
+ * 
+ * Configures the DRV8301 gate driver IC registers for BLDC motor control.
+ * Sets up gate current, PWM mode, overcurrent protection, and amplifier gain.
+ */
 extern void drv8301_init(void);
+
+/**
+ * @brief Check and handle DRV8301 fault conditions
+ * 
+ * Monitors the FAULT pin of DRV8301 and disables gate drivers if fault detected.
+ * Critical for protecting the motor driver hardware from damage.
+ */
 extern void drv8301_protection(void);
+
+/**
+ * @brief Read data from DRV8301 register via SPI
+ * 
+ * @param address Register address (0-3)
+ * @return uint16_t Register value read from DRV8301
+ */
 extern uint16_t drv8301_spi_read(uint8_t address);
 
 

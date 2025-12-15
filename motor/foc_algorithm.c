@@ -1,15 +1,19 @@
 /**********************************
-      
-**********************************/
+ * FOC Algorithm Implementation
+ * Field Oriented Control for BLDC/PMSM motors
+ * Includes coordinate transforms, PI controllers, and SVPWM
+ **********************************/
 #include "main.h"
 #include "foc_algorithm.h"
 
-
+/* D-axis current PI controller parameters */
 real32_T D_PI_I = 1282.8F;
 real32_T D_PI_KB = 15.0F;
 real32_T D_PI_LOW_LIMIT = -24.0F;
 real32_T D_PI_P = 2.199F;
 real32_T D_PI_UP_LIMIT = 24.0F;
+
+/* Q-axis current PI controller parameters */
 real32_T Q_PI_I = 1282.8F;
 real32_T Q_PI_KB = 15.0F;
 real32_T Q_PI_LOW_LIMIT = -24.0F;
@@ -101,310 +105,417 @@ VOLTAGE_DQ_DEF Voltage_DQ;
 CURRENT_PID_DEF Current_D_PID;
 CURRENT_PID_DEF Current_Q_PID;
 
-/***************************************
-功能：Clark变换
-形参：三相电流以及alpha_beta电流
-说明：由三相互差120度变换到两相互差90度
-***************************************/
-void Clarke_Transf(CURRENT_ABC_DEF Current_abc_temp,CURRENT_ALPHA_BETA_DEF* Current_alpha_beta_temp)
+/**
+ * @brief Clarke Transform (abc -> alpha-beta)
+ * 
+ * Transforms three-phase currents (120 degrees apart) to two-phase
+ * orthogonal currents (90 degrees apart) in the stationary reference frame.
+ * This is the first step in FOC to simplify the control problem.
+ * 
+ * @param Current_abc_temp Three-phase currents (Ia, Ib, Ic)
+ * @param Current_alpha_beta_temp Output: Two-phase currents (Ialpha, Ibeta)
+ */
+void Clarke_Transf(CURRENT_ABC_DEF Current_abc_temp, CURRENT_ALPHA_BETA_DEF* Current_alpha_beta_temp)
 {
-  Current_alpha_beta_temp->Ialpha = (Current_abc_temp.Ia - (Current_abc_temp.Ib + Current_abc_temp.Ic) * 0.5F) * 2.0F / 3.0F;
-  Current_alpha_beta_temp->Ibeta = (Current_abc_temp.Ib - Current_abc_temp.Ic) * 0.866025388F * 2.0F / 3.0F;
+	Current_alpha_beta_temp->Ialpha = (Current_abc_temp.Ia - (Current_abc_temp.Ib + Current_abc_temp.Ic) * 0.5F) * 2.0F / 3.0F;
+	Current_alpha_beta_temp->Ibeta = (Current_abc_temp.Ib - Current_abc_temp.Ic) * 0.866025388F * 2.0F / 3.0F;
 }
-/***************************************
-功能：SVPWM计算
-形参：alpha_beta电压以及母线电压、定时器周期
-说明：根据alpha_beta电压计算三相占空比
-***************************************/
-void SVPWM_Calc(VOLTAGE_ALPHA_BETA_DEF v_alpha_beta_temp,real32_T Udc_temp,real32_T Tpwm_temp)
+/**
+ * @brief Space Vector PWM Calculation
+ * 
+ * Calculates three-phase PWM duty cycles from alpha-beta voltage reference.
+ * SVPWM provides better DC bus utilization (15% more voltage) compared to
+ * sinusoidal PWM and reduces current harmonics.
+ * 
+ * Algorithm:
+ * 1. Determine voltage vector sector (1-6)
+ * 2. Calculate switching times Tx, Ty for active vectors
+ * 3. Distribute zero vectors symmetrically (Ta, Tb, Tc)
+ * 4. Apply over-modulation limiting if needed
+ * 
+ * @param v_alpha_beta_temp Alpha-beta voltage reference
+ * @param Udc_temp DC bus voltage
+ * @param Tpwm_temp PWM timer period
+ */
+void SVPWM_Calc(VOLTAGE_ALPHA_BETA_DEF v_alpha_beta_temp, real32_T Udc_temp, real32_T Tpwm_temp)
 {
-  int32_T sector;
-  real32_T Tcmp1,Tcmp2,Tcmp3,Tx,Ty,f_temp,Ta,Tb,Tc;
-  sector = 0;
-  Tcmp1 = 0.0F;
-  Tcmp2 = 0.0F;
-  Tcmp3 = 0.0F;
-  if (v_alpha_beta_temp.Vbeta > 0.0F) {
-    sector = 1;
-  }
-  
-  if ((1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
-    sector += 2;
-  }
-  
-  if ((-1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
-    sector += 4;
-  }
-  
-  switch (sector) {
-  case 1:
-    Tx = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-    Ty = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-    break;
-    
-  case 2:
-    Tx = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-    Ty = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
-    break;
-    
-  case 3:
-    Tx = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-    Ty = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
-    break;
-    
-  case 4:
-    Tx = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
-    Ty = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-    break;
-    
-  case 5:
-    Tx = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
-    Ty = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-    break;
-    
-  default:
-    Tx = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-    Ty = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-    break;
-  }
-  
-  f_temp = Tx + Ty;
-  if (f_temp > Tpwm_temp) {
-    Tx /= f_temp;
-    Ty /= (Tx + Ty);
-  }
-  
-  Ta = (Tpwm_temp - (Tx + Ty)) / 4.0F;
-  Tb = Tx / 2.0F + Ta;
-  Tc = Ty / 2.0F + Tb;
-  switch (sector) {
-  case 1:
-    Tcmp1 = Tb;
-    Tcmp2 = Ta;
-    Tcmp3 = Tc;
-    break;
-    
-  case 2:
-    Tcmp1 = Ta;
-    Tcmp2 = Tc;
-    Tcmp3 = Tb;
-    break;
-    
-  case 3:
-    Tcmp1 = Ta;
-    Tcmp2 = Tb;
-    Tcmp3 = Tc;
-    break;
-    
-  case 4:
-    Tcmp1 = Tc;
-    Tcmp2 = Tb;
-    Tcmp3 = Ta;
-    break;
-    
-  case 5:
-    Tcmp1 = Tc;
-    Tcmp2 = Ta;
-    Tcmp3 = Tb;
-    break;
-    
-  case 6:
-    Tcmp1 = Tb;
-    Tcmp2 = Tc;
-    Tcmp3 = Ta;
-    break;
-  }
-  
-  FOC_Output.Tcmp1 = Tcmp1;
-  FOC_Output.Tcmp2 = Tcmp2;
-  FOC_Output.Tcmp3 = Tcmp3;
+	int32_T sector;
+	real32_T Tcmp1, Tcmp2, Tcmp3, Tx, Ty, f_temp, Ta, Tb, Tc;
+	sector = 0;
+	Tcmp1 = 0.0F;
+	Tcmp2 = 0.0F;
+	Tcmp3 = 0.0F;
+	/* Determine sector (1-6) based on voltage vector angle */
+	if (v_alpha_beta_temp.Vbeta > 0.0F) {
+		sector = 1;
+	}
+
+	if ((1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
+		sector += 2;
+	}
+
+	if ((-1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
+		sector += 4;
+	}
+
+	/* Calculate active vector times for each sector */
+	switch (sector) {
+	case 1:
+		Tx = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+		Ty = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+		break;
+
+	case 2:
+		Tx = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+		Ty = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
+		break;
+
+	case 3:
+		Tx = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+		Ty = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
+		break;
+
+	case 4:
+		Tx = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
+		Ty = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+		break;
+
+	case 5:
+		Tx = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
+		Ty = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+		break;
+
+	default:
+		Tx = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+		Ty = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+		break;
+	}
+
+	/* Over-modulation protection - scale down if total time exceeds period */
+	f_temp = Tx + Ty;
+	if (f_temp > Tpwm_temp) {
+		Tx /= f_temp;
+		Ty /= (Tx + Ty);
+	}
+
+	/* Calculate zero vector distribution for center-aligned PWM */
+	Ta = (Tpwm_temp - (Tx + Ty)) / 4.0F;
+	Tb = Tx / 2.0F + Ta;
+	Tc = Ty / 2.0F + Tb;
+
+	/* Map switching times to three phases based on sector */
+	switch (sector) {
+	case 1:
+		Tcmp1 = Tb;
+		Tcmp2 = Ta;
+		Tcmp3 = Tc;
+		break;
+
+	case 2:
+		Tcmp1 = Ta;
+		Tcmp2 = Tc;
+		Tcmp3 = Tb;
+		break;
+
+	case 3:
+		Tcmp1 = Ta;
+		Tcmp2 = Tb;
+		Tcmp3 = Tc;
+		break;
+
+	case 4:
+		Tcmp1 = Tc;
+		Tcmp2 = Tb;
+		Tcmp3 = Ta;
+		break;
+
+	case 5:
+		Tcmp1 = Tc;
+		Tcmp2 = Ta;
+		Tcmp3 = Tb;
+		break;
+
+	case 6:
+		Tcmp1 = Tb;
+		Tcmp2 = Tc;
+		Tcmp3 = Ta;
+		break;
+	}
+
+	FOC_Output.Tcmp1 = Tcmp1;
+	FOC_Output.Tcmp2 = Tcmp2;
+	FOC_Output.Tcmp3 = Tcmp3;
 }
 
-/***************************************
-功能：COS_SIN值计算
-形参：角度以及COS_SIN结构体
-说明：COS_SIN值计算
-***************************************/
-void Angle_To_Cos_Sin(real32_T angle_temp,TRANSF_COS_SIN_DEF* cos_sin_temp)
+/**
+ * @brief Calculate sine and cosine for Park/Inverse Park transforms
+ * 
+ * Computes trigonometric functions needed for coordinate transforms.
+ * Uses ARM CMSIS-DSP optimized functions for fast computation.
+ * 
+ * @param angle_temp Rotor angle in radians
+ * @param cos_sin_temp Output: Cosine and sine values
+ */
+void Angle_To_Cos_Sin(real32_T angle_temp, TRANSF_COS_SIN_DEF* cos_sin_temp)
 {
-  cos_sin_temp->Cos = arm_cos_f32(angle_temp);
-  cos_sin_temp->Sin = arm_sin_f32(angle_temp);
+	cos_sin_temp->Cos = arm_cos_f32(angle_temp);
+	cos_sin_temp->Sin = arm_sin_f32(angle_temp);
 }
-/***************************************
-功能：PARK变换
-形参：alpha_beta电流、COS_SIN值、DQ轴电流
-说明：交流变直流
-***************************************/
-void Park_Transf(CURRENT_ALPHA_BETA_DEF current_alpha_beta_temp,TRANSF_COS_SIN_DEF cos_sin_temp,CURRENT_DQ_DEF* current_dq_temp)
+/**
+ * @brief Park Transform (alpha-beta -> dq)
+ * 
+ * Transforms currents from stationary frame to rotating synchronous frame.
+ * In the dq frame aligned with rotor flux, AC currents become DC values
+ * which are easy to control with PI controllers.
+ * 
+ * - Id: Direct-axis current (flux-producing, kept at 0 for SPMSM)
+ * - Iq: Quadrature-axis current (torque-producing)
+ * 
+ * @param current_alpha_beta_temp Stationary frame currents
+ * @param cos_sin_temp Sine and cosine of rotor angle
+ * @param current_dq_temp Output: Rotating frame currents
+ */
+void Park_Transf(CURRENT_ALPHA_BETA_DEF current_alpha_beta_temp, TRANSF_COS_SIN_DEF cos_sin_temp, CURRENT_DQ_DEF* current_dq_temp)
 {
-  current_dq_temp->Id = current_alpha_beta_temp.Ialpha * cos_sin_temp.Cos + current_alpha_beta_temp.Ibeta * cos_sin_temp.Sin;
-  current_dq_temp->Iq = -current_alpha_beta_temp.Ialpha * cos_sin_temp.Sin + current_alpha_beta_temp.Ibeta * cos_sin_temp.Cos;
+	current_dq_temp->Id = current_alpha_beta_temp.Ialpha * cos_sin_temp.Cos + current_alpha_beta_temp.Ibeta * cos_sin_temp.Sin;
+	current_dq_temp->Iq = -current_alpha_beta_temp.Ialpha * cos_sin_temp.Sin + current_alpha_beta_temp.Ibeta * cos_sin_temp.Cos;
 }
-/***************************************
-功能：反PARK变换
-形参：DQ轴电压、COS_SIN值、alpha_beta电压
-说明：直流变交流
-***************************************/
-void Rev_Park_Transf(VOLTAGE_DQ_DEF v_dq_temp,TRANSF_COS_SIN_DEF cos_sin_temp,VOLTAGE_ALPHA_BETA_DEF* v_alpha_beta_temp)
+/**
+ * @brief Inverse Park Transform (dq -> alpha-beta)
+ * 
+ * Transforms voltage references from rotating frame back to stationary frame.
+ * Converts DC voltage commands from PI controllers to AC voltages for SVPWM.
+ * 
+ * @param v_dq_temp Rotating frame voltage commands from PI controllers
+ * @param cos_sin_temp Sine and cosine of rotor angle
+ * @param v_alpha_beta_temp Output: Stationary frame voltage references
+ */
+void Rev_Park_Transf(VOLTAGE_DQ_DEF v_dq_temp, TRANSF_COS_SIN_DEF cos_sin_temp, VOLTAGE_ALPHA_BETA_DEF* v_alpha_beta_temp)
 {
-  v_alpha_beta_temp->Valpha = cos_sin_temp.Cos * v_dq_temp.Vd - cos_sin_temp.Sin * v_dq_temp.Vq;
-  v_alpha_beta_temp->Vbeta  = cos_sin_temp.Sin * v_dq_temp.Vd + cos_sin_temp.Cos * v_dq_temp.Vq;
-}
-
-/***************************************
-功能：电流环PID
-形参：电流参考、电流反馈、电压输出、PID结构体
-说明：根据电流误差去调节电流输出
-***************************************/
-void Current_PID_Calc(real32_T ref_temp,real32_T fdb_temp,real32_T* out_temp,CURRENT_PID_DEF* current_pid_temp)
-{
-  real32_T error;
-  real32_T temp;
-  error = ref_temp - fdb_temp;
-  temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
-  if (temp > current_pid_temp->Max_Output) 
-  {
-    *out_temp = current_pid_temp->Max_Output;
-  } 
-  else if (temp < current_pid_temp->Min_Output) 
-  {
-    *out_temp = current_pid_temp->Min_Output;
-  } 
-  else 
-  {
-    *out_temp = temp;
-  }
-  current_pid_temp->I_Sum += ((*out_temp - temp) * current_pid_temp->B_Gain + current_pid_temp->I_Gain * error) *0.0001f;
+	v_alpha_beta_temp->Valpha = cos_sin_temp.Cos * v_dq_temp.Vd - cos_sin_temp.Sin * v_dq_temp.Vq;
+	v_alpha_beta_temp->Vbeta  = cos_sin_temp.Sin * v_dq_temp.Vd + cos_sin_temp.Cos * v_dq_temp.Vq;
 }
 
+/**
+ * @brief Current Loop PI Controller with Anti-Windup
+ * 
+ * PI controller for d-axis and q-axis current regulation.
+ * Implements back-calculation anti-windup to prevent integral saturation.
+ * 
+ * Control law:
+ * - Output = Kp * error + integral
+ * - Integral update includes back-calculation term for anti-windup
+ * 
+ * This is critical for FOC performance:
+ * - Fast current response (bandwidth ~1kHz typical)
+ * - Prevents current overshoot during transients
+ * - Maintains torque control accuracy
+ * 
+ * @param ref_temp Current reference (Id_ref or Iq_ref)
+ * @param fdb_temp Current feedback (Id or Iq)
+ * @param out_temp Output: Voltage command (Vd or Vq)
+ * @param current_pid_temp PI controller state structure
+ */
+void Current_PID_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, CURRENT_PID_DEF* current_pid_temp)
+{
+	real32_T error;
+	real32_T temp;
+	
+	error = ref_temp - fdb_temp;
+	temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
+	
+	/* Output limiting */
+	if (temp > current_pid_temp->Max_Output)
+	{
+		*out_temp = current_pid_temp->Max_Output;
+	}
+	else if (temp < current_pid_temp->Min_Output)
+	{
+		*out_temp = current_pid_temp->Min_Output;
+	}
+	else
+	{
+		*out_temp = temp;
+	}
+	
+	/* Integral update with back-calculation anti-windup */
+	current_pid_temp->I_Sum += ((*out_temp - temp) * current_pid_temp->B_Gain + current_pid_temp->I_Gain * error) * 0.0001f;
+}
 
 
+
+/**
+ * @brief Execute one complete FOC control cycle
+ * 
+ * This function implements the complete Field Oriented Control algorithm:
+ * 
+ * FOC Control Flow:
+ * 1. Clarke Transform: Convert 3-phase currents (abc) to 2-phase (alpha-beta)
+ * 2. Park Transform: Convert stationary frame to rotating frame (dq)
+ * 3. Current PI Control: Regulate Id and Iq independently
+ * 4. Inverse Park: Convert voltage commands back to stationary frame
+ * 5. SVPWM: Generate three-phase PWM duty cycles
+ * 6. State Observer: Estimate rotor position and speed (EKF)
+ * 7. Parameter ID: Identify motor parameters online
+ * 
+ * Called at PWM frequency for real-time motor control.
+ */
 void foc_algorithm_step(void)
 {
+	/* Get three-phase current measurements */
+	Current_Iabc.Ia = FOC_Input.ia;
+	Current_Iabc.Ib = FOC_Input.ib;
+	Current_Iabc.Ic = FOC_Input.ic;
 
-  Current_Iabc.Ia = FOC_Input.ia;         //三相电流赋值
-  Current_Iabc.Ib = FOC_Input.ib;
-  Current_Iabc.Ic = FOC_Input.ic;
-  
-  Clarke_Transf(Current_Iabc,&Current_Ialpha_beta);        //CLARK 变换
-  Angle_To_Cos_Sin(FOC_Input.theta,&Transf_Cos_Sin);     //由角度计算 park变换和 反park变换的 COS SIN值
-  Park_Transf(Current_Ialpha_beta,Transf_Cos_Sin,&Current_Idq);  //Park变换，由Ialpha Ibeta 与角度信息，去计算Id Iq  // 由交流信息转化为直流信息，方便PID控制 
-  Current_PID_Calc(FOC_Input.Id_ref,Current_Idq.Id,&Voltage_DQ.Vd,&Current_D_PID);     //D轴电流环PID  根据电流参考与电流反馈去计算 输出电压
-  Current_PID_Calc(FOC_Input.Iq_ref,Current_Idq.Iq,&Voltage_DQ.Vq,&Current_Q_PID);     //Q轴电流环PID  根据电流参考与电流反馈去计算 输出电压
-  Rev_Park_Transf(Voltage_DQ,Transf_Cos_Sin,&Voltage_Alpha_Beta);                //反park变换  通过电流环得到的dq轴电压信息结合角度信息，去把直流信息转化为交流信息用于SVPWM的输入
+	/* Step 1: Clarke Transform - Convert to two-phase stationary frame */
+	Clarke_Transf(Current_Iabc, &Current_Ialpha_beta);
 
-  FOC_Interface_states.EKF_Interface[0] = Voltage_Alpha_Beta.Valpha;   //扩展卡尔曼估计转子位置与速度需要的输入信息
-  FOC_Interface_states.EKF_Interface[1] = Voltage_Alpha_Beta.Vbeta;    //状态观测器输入
-  FOC_Interface_states.EKF_Interface[2] = Current_Ialpha_beta.Ialpha;
-  FOC_Interface_states.EKF_Interface[3] = Current_Ialpha_beta.Ibeta;
-  FOC_Interface_states.EKF_Interface[4] = FOC_Input.Rs;
-  FOC_Interface_states.EKF_Interface[5] = FOC_Input.Ls;
-  FOC_Interface_states.EKF_Interface[6] = FOC_Input.flux;
-  
+	/* Calculate sin/cos for coordinate transforms */
+	Angle_To_Cos_Sin(FOC_Input.theta, &Transf_Cos_Sin);
 
-  stm32_ekf_Outputs_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],  //扩展卡尔曼估计转子位置与速度的输出函数
-                            &FOC_Interface_states.EKF_States[0]);
+	/* Step 2: Park Transform - Convert to rotating dq frame */
+	Park_Transf(Current_Ialpha_beta, Transf_Cos_Sin, &Current_Idq);
 
-  FOC_Interface_states.R_flux_Ident_Interface[0] = Current_Idq.Iq;         //电机电阻与磁链参数识别算法的输入
-  FOC_Interface_states.R_flux_Ident_Interface[1] = FOC_Input.speed_fdk;
-  FOC_Interface_states.R_flux_Ident_Interface[2] = Voltage_DQ.Vq;
+	/* Step 3: Current PI Controllers - Regulate d and q axis currents */
+	Current_PID_Calc(FOC_Input.Id_ref, Current_Idq.Id, &Voltage_DQ.Vd, &Current_D_PID);
+	Current_PID_Calc(FOC_Input.Iq_ref, Current_Idq.Iq, &Voltage_DQ.Vq, &Current_Q_PID);
 
-  FOC_Interface_states.L_Ident_Interface[0] = -(Current_Idq.Iq * FOC_Input.speed_fdk);//电机电感参数识别算法的输入
-  FOC_Interface_states.L_Ident_Interface[1] = Voltage_DQ.Vd;
-  
+	/* Step 4: Inverse Park Transform - Convert voltage commands to stationary frame */
+	Rev_Park_Transf(Voltage_DQ, Transf_Cos_Sin, &Voltage_Alpha_Beta);
 
-  L_identification_Outputs_wrapper(&FOC_Interface_states.L_Ident_Interface[0],  //电机电感参数识别算法的输出
-                                   &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
-  
+	/**
+	 * Step 6: Extended Kalman Filter (EKF) State Observer
+	 * Estimates rotor position and speed for sensorless control
+	 * Uses voltage and current measurements plus motor parameters
+	 */
+	FOC_Interface_states.EKF_Interface[0] = Voltage_Alpha_Beta.Valpha;
+	FOC_Interface_states.EKF_Interface[1] = Voltage_Alpha_Beta.Vbeta;
+	FOC_Interface_states.EKF_Interface[2] = Current_Ialpha_beta.Ialpha;
+	FOC_Interface_states.EKF_Interface[3] = Current_Ialpha_beta.Ibeta;
+	FOC_Interface_states.EKF_Interface[4] = FOC_Input.Rs;
+	FOC_Interface_states.EKF_Interface[5] = FOC_Input.Ls;
+	FOC_Interface_states.EKF_Interface[6] = FOC_Input.flux;
 
-  R_flux_identification_Outputs_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],//电机电阻与磁链参数识别算法的输出
-                                        &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
-  
-  
+	/* EKF output calculation */
+	stm32_ekf_Outputs_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],
+	                          &FOC_Interface_states.EKF_States[0]);
 
-  SVPWM_Calc(Voltage_Alpha_Beta,FOC_Input.Udc,FOC_Input.Tpwm);       //SVPWM 计算模块
- 
+	/**
+	 * Step 7: Motor Parameter Identification
+	 * Online estimation of resistance, inductance, and flux linkage
+	 */
+	
+	/* Prepare inputs for resistance and flux identification */
+	FOC_Interface_states.R_flux_Ident_Interface[0] = Current_Idq.Iq;
+	FOC_Interface_states.R_flux_Ident_Interface[1] = FOC_Input.speed_fdk;
+	FOC_Interface_states.R_flux_Ident_Interface[2] = Voltage_DQ.Vq;
 
-  stm32_ekf_Update_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],   //扩展卡尔曼滤波算法的计算
-                           &FOC_Interface_states.EKF_States[0]);                         //也就是无感状态观测器的计算
-  
+	/* Prepare inputs for inductance identification */
+	FOC_Interface_states.L_Ident_Interface[0] = -(Current_Idq.Iq * FOC_Input.speed_fdk);
+	FOC_Interface_states.L_Ident_Interface[1] = Voltage_DQ.Vd;
 
-  L_identification_Update_wrapper(&FOC_Interface_states.L_Ident_Interface[0],//电机电感参数识别算法的计算
-                                  &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
-  
- 
-  R_flux_identification_Update_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],//电机电阻与磁链参数识别算法的计算
-                                       &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
-  
+	/* Execute parameter identification outputs */
+	L_identification_Outputs_wrapper(&FOC_Interface_states.L_Ident_Interface[0],
+	                                 &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
 
-  FOC_Output.L_RF[0] = FOC_Interface_states.L_Ident_Output;
-  FOC_Output.L_RF[1] = FOC_Interface_states.R_flux_Ident_Output[0];
-  FOC_Output.L_RF[2] = FOC_Interface_states.R_flux_Ident_Output[1];
+	R_flux_identification_Outputs_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],
+	                                      &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
+
+	/* Step 5: Space Vector PWM - Generate three-phase PWM duty cycles */
+	SVPWM_Calc(Voltage_Alpha_Beta, FOC_Input.Udc, FOC_Input.Tpwm);
+
+	/* Update EKF state observer */
+	stm32_ekf_Update_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],
+	                         &FOC_Interface_states.EKF_States[0]);
+
+	/* Update parameter identification states */
+	L_identification_Update_wrapper(&FOC_Interface_states.L_Ident_Interface[0],
+	                                &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
+
+	R_flux_identification_Update_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],
+	                                     &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
+
+	/* Pack identified motor parameters for output */
+	FOC_Output.L_RF[0] = FOC_Interface_states.L_Ident_Output;
+	FOC_Output.L_RF[1] = FOC_Interface_states.R_flux_Ident_Output[0];
+	FOC_Output.L_RF[2] = FOC_Interface_states.R_flux_Ident_Output[1];
 }
 
 
+/**
+ * @brief Initialize FOC Algorithm and Sub-Components
+ * 
+ * Performs complete initialization of FOC control system:
+ * - Current loop PI controllers (D and Q axis)
+ * - Speed loop PI controller
+ * - Extended Kalman Filter for sensorless control
+ * - Motor parameter identification algorithms
+ * - All state variables
+ * 
+ * Must be called once before starting motor operation.
+ */
 void foc_algorithm_initialize(void)
 {
-  //电流环PID 参数 初始化
-  {
-  Current_D_PID.P_Gain = D_PI_P;
-  Current_D_PID.I_Gain = D_PI_I;
-  Current_D_PID.B_Gain = D_PI_KB;
-  Current_D_PID.Max_Output = D_PI_UP_LIMIT;
-  Current_D_PID.Min_Output = D_PI_LOW_LIMIT;
-  Current_D_PID.I_Sum = 0.0f;
-  
-  Current_Q_PID.P_Gain = Q_PI_P;
-  Current_Q_PID.I_Gain = Q_PI_I;
-  Current_Q_PID.B_Gain = Q_PI_KB;
-  Current_Q_PID.Max_Output = Q_PI_UP_LIMIT;
-  Current_Q_PID.Min_Output = Q_PI_LOW_LIMIT;
-  Current_Q_PID.I_Sum = 0.0f;
-  }
-  speed_pid_initialize();  //速度环PID 参数 初始化
-               
-  stm32_ekf_Start_wrapper(&FOC_Interface_states.EKF_States[0]);//扩展卡尔曼滤波算法 参数初始化
+	/* Initialize D-axis current PI controller */
+	{
+		Current_D_PID.P_Gain = D_PI_P;
+		Current_D_PID.I_Gain = D_PI_I;
+		Current_D_PID.B_Gain = D_PI_KB;
+		Current_D_PID.Max_Output = D_PI_UP_LIMIT;
+		Current_D_PID.Min_Output = D_PI_LOW_LIMIT;
+		Current_D_PID.I_Sum = 0.0f;
 
-  L_identification_Start_wrapper(&FOC_Interface_states.L_Ident_States);//电机电感参数识别算法 参数初始化
+		/* Initialize Q-axis current PI controller */
+		Current_Q_PID.P_Gain = Q_PI_P;
+		Current_Q_PID.I_Gain = Q_PI_I;
+		Current_Q_PID.B_Gain = Q_PI_KB;
+		Current_Q_PID.Max_Output = Q_PI_UP_LIMIT;
+		Current_Q_PID.Min_Output = Q_PI_LOW_LIMIT;
+		Current_Q_PID.I_Sum = 0.0f;
+	}
 
-  R_flux_identification_Start_wrapper(&FOC_Interface_states.R_flux_Ident_States);//电机电阻与磁链参数识别算法 参数初始化
-  
-  //状态变量初始化
-  {
-    real_T initVector[4] = { 0, 0, 0, 0 };
-    
-    {
-      int_T i1;
-      real_T *dw_DSTATE = &FOC_Interface_states.EKF_States[0];
-      for (i1=0; i1 < 4; i1++) {
-        dw_DSTATE[i1] = initVector[i1];
-      }
-    }
-  }
- 
-  {
-    real_T initVector[1] = { 0 };
-    
-    {
-      int_T i1;
-      for (i1=0; i1 < 1; i1++) {
-        FOC_Interface_states.L_Ident_States = initVector[0];
-      }
-    }
-  }
-  
+	/* Initialize speed loop PI controller */
+	speed_pid_initialize();
 
-  {
-    real_T initVector[1] = { 0 };
-    
-    {
-      int_T i1;
-      for (i1=0; i1 < 1; i1++) {
-        FOC_Interface_states.R_flux_Ident_States = initVector[0];
-      }
-    }
-  }
-  
+	/* Initialize Extended Kalman Filter for position/speed estimation */
+	stm32_ekf_Start_wrapper(&FOC_Interface_states.EKF_States[0]);
 
+	/* Initialize motor parameter identification algorithms */
+	L_identification_Start_wrapper(&FOC_Interface_states.L_Ident_States);
+	R_flux_identification_Start_wrapper(&FOC_Interface_states.R_flux_Ident_States);
+
+	/* Initialize EKF state variables */
+	{
+		real_T initVector[4] = { 0, 0, 0, 0 };
+		{
+			int_T i1;
+			real_T *dw_DSTATE = &FOC_Interface_states.EKF_States[0];
+			for (i1 = 0; i1 < 4; i1++) {
+				dw_DSTATE[i1] = initVector[i1];
+			}
+		}
+	}
+
+	/* Initialize inductance identification state */
+	{
+		real_T initVector[1] = { 0 };
+		{
+			int_T i1;
+			for (i1 = 0; i1 < 1; i1++) {
+				FOC_Interface_states.L_Ident_States = initVector[0];
+			}
+		}
+	}
+
+	/* Initialize resistance/flux identification state */
+	{
+		real_T initVector[1] = { 0 };
+		{
+			int_T i1;
+			for (i1 = 0; i1 < 1; i1++) {
+				FOC_Interface_states.R_flux_Ident_States = initVector[0];
+			}
+		}
+	}
 }
 

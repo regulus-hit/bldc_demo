@@ -78,7 +78,7 @@ void hard_init(void)
   TIM_ICInit(HALL_TIM,&TIM_HALLICInitStructure);
   
   
-  TIM_PrescalerConfig(HALL_TIM, (u16)0,TIM_PSCReloadMode_Immediate);
+  TIM_PrescalerConfig(HALL_TIM, (uint16_t)0,TIM_PSCReloadMode_Immediate);
   TIM_InternalClockConfig(HALL_TIM);
   TIM_SelectHallSensor(HALL_TIM, ENABLE);
   TIM_SelectInputTrigger(HALL_TIM, TIM_TS_TI1FP1);

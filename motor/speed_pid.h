@@ -22,25 +22,49 @@
 
 
 
-extern real32_T Speed_Ref;                 
-extern real32_T Speed_Fdk;                 
-extern real32_T Speed_Pid_Out;             
+extern real32_T Speed_Ref;		/* Speed reference in Hz */
+extern real32_T Speed_Fdk;		/* Speed feedback in rad/s */
+extern real32_T Speed_Pid_Out;	/* Speed PI output (Iq reference) */
 
+/**
+ * @brief Speed PI Controller Structure
+ * 
+ * PI controller for speed regulation in FOC control.
+ * Outer loop controller that generates torque (Iq) reference.
+ */
 typedef struct
 {
-  real32_T P_Gain;
-  real32_T I_Gain;
-  real32_T D_Gain;
-  real32_T B_Gain;
-  real32_T Max_Output;
-  real32_T Min_Output;
-  real32_T I_Sum;
-}SPEED_PID_DEF;
+	real32_T P_Gain;		/* Proportional gain */
+	real32_T I_Gain;		/* Integral gain */
+	real32_T D_Gain;		/* Derivative gain (unused) */
+	real32_T B_Gain;		/* Anti-windup back-calculation gain */
+	real32_T Max_Output;	/* Upper output limit */
+	real32_T Min_Output;	/* Lower output limit */
+	real32_T I_Sum;			/* Integral accumulator */
+} SPEED_PID_DEF;
 
 extern SPEED_PID_DEF Speed_Pid;
 
+/**
+ * @brief Initialize Speed PI Controller
+ * 
+ * Sets up PI gains and limits, clears integral state.
+ */
 extern void speed_pid_initialize(void);
-extern void Speed_Pid_Calc(real32_T ref_temp,real32_T fdb_temp,real32_T* out_temp,SPEED_PID_DEF* current_pid_temp);
+
+/**
+ * @brief Speed PI Controller Calculation
+ * 
+ * Outer loop controller for speed regulation. Generates torque current
+ * reference (Iq_ref) based on speed error. Typically runs at lower
+ * frequency than current loop (e.g., 1kHz vs 10kHz).
+ * 
+ * @param ref_temp Speed reference in Hz
+ * @param fdb_temp Speed feedback in rad/s
+ * @param out_temp Output: Iq current reference
+ * @param current_pid_temp PI controller state structure
+ */
+extern void Speed_Pid_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, SPEED_PID_DEF* current_pid_temp);
 
 extern real32_T SPEED_PI_I;
 extern real32_T SPEED_PI_KB;

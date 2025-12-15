@@ -1,4 +1,5 @@
 #ifndef OLED_OLEDFONT_H_
+#include <stdint.h>
 #define OLED_OLEDFONT_H_
 
 extern const unsigned char F6x8[][6];
