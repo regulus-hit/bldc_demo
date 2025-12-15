@@ -4,7 +4,7 @@ Purpose: give an AI coding agent immediate, actionable context to be productive 
 
 - **For Start**: Always read [docs/project_stat.md](docs/project_stat.md) first for project overview, recent changes, and style notes.
 
-- **Big picture**: STM32F4 BLDC FOC firmware (Keil µVision). Layers: hardware init ([user/board_config.c](user/board_config.c), [user/system_stm32f4xx.c](user/system_stm32f4xx.c)); entry/glue ([user/main.c](user/main.c)); gate driver ([motor/drv8301.c](motor/drv8301.c), [driver_soft/](driver_soft)); control core ([motor/foc_algorithm.c](motor/foc_algorithm.c), [motor/hall_sensor.c](motor/hall_sensor.c), [motor/hybrid_observer.c](motor/hybrid_observer.c)).
+- **Big picture**: STM32F446 BLDC FOC firmware (Keil µVision). Layers: hardware init ([user/board_config.c](user/board_config.c), [user/system_stm32f4xx.c](user/system_stm32f4xx.c)); entry/glue ([user/main.c](user/main.c)); gate driver ([motor/drv8301.c](motor/drv8301.c), [driver_soft/](driver_soft)); control core ([motor/foc_algorithm.c](motor/foc_algorithm.c), [motor/hall_sensor.c](motor/hall_sensor.c), [motor/hybrid_observer.c](motor/hybrid_observer.c)).
 
 - **Build & debug**: Build with Keil project [Keil_Project/stm32_drv8301_keil.uvprojx](Keil_Project/stm32_drv8301_keil.uvprojx) (includes CMSIS + StdPeriph paths). Debug/flash via Keil + J-Link configs in [Keil_Project/](Keil_Project) and [settings/](settings). Artifacts under [Debug/](Debug) and [Release/](Release).
 

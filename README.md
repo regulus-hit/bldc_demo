@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/badge/platform-STM32F4-green.svg)](https://www.st.com/en/microcontrollers-microprocessors/stm32f4-series.html)
 [![Build](https://img.shields.io/badge/IDE-Keil%20µVision-orange.svg)](https://www.keil.com/)
 
-A production-ready BLDC (Brushless DC) motor control system implementing Field-Oriented Control (FOC) on STM32F4 microcontroller with DRV8301 gate driver. Features multiple sensor modes, advanced control algorithms, and comprehensive enhancements for optimal motor performance.
+A production-ready BLDC (Brushless DC) motor control system implementing Field-Oriented Control (FOC) on STM32F446 microcontroller with DRV8301 gate driver. Features multiple sensor modes, advanced control algorithms, and comprehensive enhancements for optimal motor performance.
 
 ## Table of Contents
 
@@ -109,7 +109,7 @@ PWM ISR (10kHz) → ADC Sample → motor_run() → foc_algorithm_step() → PWM 
 
 ## Hardware Requirements
 
-- **Microcontroller**: STM32F4 series (tested on STM32F407)
+- **Microcontroller**: STM32F4 series (tested on STM32F446)
 - **Gate Driver**: DRV8301 or compatible
 - **Motor**: 3-phase BLDC/PMSM with Hall sensors (optional for sensorless mode)
 - **Power Supply**: Appropriate DC voltage for motor (typically 12V-48V)
@@ -134,7 +134,7 @@ cd bldc_demo
 ```
 
 ### 2. Hardware Setup
-1. Connect STM32F4 board to DRV8301 gate driver
+1. Connect STM32F446 board to DRV8301 gate driver
 2. Connect 3-phase motor to gate driver outputs
 3. Connect Hall sensors (if using Hall or Hybrid mode)
 4. Connect power supply
