@@ -5,6 +5,8 @@
 **Scope:** Comprehensive mathematical verification and optimization analysis  
 **Status:** 5 critical bugs fixed, hybrid observer implemented, all algorithms verified correct
 
+**For agents:** Always remember to generate documents for future reference, and update docs/project_stat.md after bugfix or implementation.
+
 ---
 
 ## Executive Summary
