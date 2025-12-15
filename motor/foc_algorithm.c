@@ -20,76 +20,43 @@ real32_T Q_PI_LOW_LIMIT = -24.0F;
 real32_T Q_PI_P = 2.199F;
 real32_T Q_PI_UP_LIMIT = 24.0F;
 
-
 FOC_INTERFACE_STATES_DEF FOC_Interface_states;
-
-
 FOC_INPUT_DEF FOC_Input;
-
-
 FOC_OUTPUT_DEF FOC_Output;
-
 
 RT_MODEL rtM_;
 RT_MODEL *const rtM = &rtM_;
 
 #ifdef __cplusplus
-
 extern "C" {
-  
 #endif
-  
-  extern void stm32_ekf_Start_wrapper(real_T *xD);
-  extern void stm32_ekf_Outputs_wrapper(const real32_T *u,
-                                        real32_T *y,
-                                        const real_T *xD);
-  extern void stm32_ekf_Update_wrapper(const real32_T *u,
-                                       real32_T *y,
-                                       real_T *xD);
-  extern void stm32_ekf_Terminate_wrapper(real_T *xD);
-  
+extern void stm32_ekf_Start_wrapper(real_T *xD);
+extern void stm32_ekf_Outputs_wrapper(const real32_T *u, real32_T *y, const real_T *xD);
+extern void stm32_ekf_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD);
+extern void stm32_ekf_Terminate_wrapper(real_T *xD);
 #ifdef __cplusplus
-  
 }
 #endif
 
 #ifdef __cplusplus
-
 extern "C" {
-  
 #endif
-  
-  extern void L_identification_Start_wrapper(real_T *xD);
-  extern void L_identification_Outputs_wrapper(const real32_T *u,
-                                               real32_T *y,
-                                               const real_T *xD);
-  extern void L_identification_Update_wrapper(const real32_T *u,
-                                              real32_T *y,
-                                              real_T *xD);
-  extern void L_identification_Terminate_wrapper(real_T *xD);
-  
+extern void L_identification_Start_wrapper(real_T *xD);
+extern void L_identification_Outputs_wrapper(const real32_T *u, real32_T *y, const real_T *xD);
+extern void L_identification_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD);
+extern void L_identification_Terminate_wrapper(real_T *xD);
 #ifdef __cplusplus
-  
 }
 #endif
 
 #ifdef __cplusplus
-
 extern "C" {
-  
 #endif
-  
-  extern void R_flux_identification_Start_wrapper(real_T *xD);
-  extern void R_flux_identification_Outputs_wrapper(const real32_T *u,
-                                                    real32_T *y,
-                                                    const real_T *xD);
-  extern void R_flux_identification_Update_wrapper(const real32_T *u,
-                                                   real32_T *y,
-                                                   real_T *xD);
-  extern void R_flux_identification_Terminate_wrapper(real_T *xD);
-  
+extern void R_flux_identification_Start_wrapper(real_T *xD);
+extern void R_flux_identification_Outputs_wrapper(const real32_T *u, real32_T *y, const real_T *xD);
+extern void R_flux_identification_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD);
+extern void R_flux_identification_Terminate_wrapper(real_T *xD);
 #ifdef __cplusplus
-  
 }
 #endif
 
@@ -117,9 +84,10 @@ CURRENT_PID_DEF Current_Q_PID;
  */
 void Clarke_Transf(CURRENT_ABC_DEF Current_abc_temp, CURRENT_ALPHA_BETA_DEF* Current_alpha_beta_temp)
 {
-	Current_alpha_beta_temp->Ialpha = (Current_abc_temp.Ia - (Current_abc_temp.Ib + Current_abc_temp.Ic) * 0.5F) * 2.0F / 3.0F;
-	Current_alpha_beta_temp->Ibeta = (Current_abc_temp.Ib - Current_abc_temp.Ic) * 0.866025388F * 2.0F / 3.0F;
+	Current_alpha_beta_temp->Ialpha = (Current_abc_temp.Ia - (Current_abc_temp.Ib + Current_abc_temp.Ic) * MATH_cos_60) * 2.0F / 3.0F;
+	Current_alpha_beta_temp->Ibeta = ((Current_abc_temp.Ib - Current_abc_temp.Ic) * MATH_cos_30) * 2.0F / 3.0F;
 }
+
 /**
  * @brief Space Vector PWM Calculation
  * 
@@ -145,55 +113,64 @@ void SVPWM_Calc(VOLTAGE_ALPHA_BETA_DEF v_alpha_beta_temp, real32_T Udc_temp, rea
 	Tcmp1 = 0.0F;
 	Tcmp2 = 0.0F;
 	Tcmp3 = 0.0F;
+
 	/* Determine sector (1-6) based on voltage vector angle */
-	if (v_alpha_beta_temp.Vbeta > 0.0F) {
+	if (v_alpha_beta_temp.Vbeta > 0.0F)
+	{
 		sector = 1;
 	}
 
-	if ((1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
+	if ((MATH_sqrt_3 * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F)
+	{
 		sector += 2;
 	}
 
-	if ((-1.73205078F * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F) {
+	if ((-MATH_sqrt_3 * v_alpha_beta_temp.Valpha - v_alpha_beta_temp.Vbeta) / 2.0F > 0.0F)
+	{
 		sector += 4;
 	}
 
 	/* Calculate active vector times for each sector */
-	switch (sector) {
-	case 1:
-		Tx = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-		Ty = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-		break;
+	switch (sector)
+	{
+		case 1:
+			Tx = (-1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+			Ty = (1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+			break;
 
-	case 2:
-		Tx = (1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-		Ty = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
-		break;
+		case 2:
+			Tx = (1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+			Ty = -(MATH_sqrt_3 * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
+			break;
 
-	case 3:
-		Tx = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-		Ty = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
-		break;
+		case 3:
+			Tx = -((-1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+			Ty = MATH_sqrt_3 * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
+			break;
 
-	case 4:
-		Tx = -(1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
-		Ty = (-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
-		break;
+		case 4:
+			Tx = -(MATH_sqrt_3 * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp);
+			Ty = (-1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp);
+			break;
 
-	case 5:
-		Tx = 1.73205078F * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
-		Ty = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-		break;
+		case 5:
+			Tx = MATH_sqrt_3 * v_alpha_beta_temp.Vbeta * Tpwm_temp / Udc_temp;
+			Ty = -((1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+			break;
 
-	default:
-		Tx = -((1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-		Ty = -((-1.5F * v_alpha_beta_temp.Valpha + 0.866025388F * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
-		break;
+		case 6:
+			Tx = -((1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+			Ty = -((-1.5F * v_alpha_beta_temp.Valpha + MATH_cos_30 * v_alpha_beta_temp.Vbeta) * (Tpwm_temp / Udc_temp));
+			break;
+
+		default:
+			break;
 	}
 
 	/* Over-modulation protection - scale down if total time exceeds period */
 	f_temp = Tx + Ty;
-	if (f_temp > Tpwm_temp) {
+	if (f_temp > Tpwm_temp)
+	{
 		Tx /= f_temp;
 		Ty /= (Tx + Ty);
 	}
@@ -204,42 +181,46 @@ void SVPWM_Calc(VOLTAGE_ALPHA_BETA_DEF v_alpha_beta_temp, real32_T Udc_temp, rea
 	Tc = Ty / 2.0F + Tb;
 
 	/* Map switching times to three phases based on sector */
-	switch (sector) {
-	case 1:
-		Tcmp1 = Tb;
-		Tcmp2 = Ta;
-		Tcmp3 = Tc;
-		break;
+	switch (sector)
+	{
+		case 1:
+			Tcmp1 = Tb;
+			Tcmp2 = Ta;
+			Tcmp3 = Tc;
+			break;
 
-	case 2:
-		Tcmp1 = Ta;
-		Tcmp2 = Tc;
-		Tcmp3 = Tb;
-		break;
+		case 2:
+			Tcmp1 = Ta;
+			Tcmp2 = Tc;
+			Tcmp3 = Tb;
+			break;
 
-	case 3:
-		Tcmp1 = Ta;
-		Tcmp2 = Tb;
-		Tcmp3 = Tc;
-		break;
+		case 3:
+			Tcmp1 = Ta;
+			Tcmp2 = Tb;
+			Tcmp3 = Tc;
+			break;
 
-	case 4:
-		Tcmp1 = Tc;
-		Tcmp2 = Tb;
-		Tcmp3 = Ta;
-		break;
+		case 4:
+			Tcmp1 = Tc;
+			Tcmp2 = Tb;
+			Tcmp3 = Ta;
+			break;
 
-	case 5:
-		Tcmp1 = Tc;
-		Tcmp2 = Ta;
-		Tcmp3 = Tb;
-		break;
+		case 5:
+			Tcmp1 = Tc;
+			Tcmp2 = Ta;
+			Tcmp3 = Tb;
+			break;
 
-	case 6:
-		Tcmp1 = Tb;
-		Tcmp2 = Tc;
-		Tcmp3 = Ta;
-		break;
+		case 6:
+			Tcmp1 = Tb;
+			Tcmp2 = Tc;
+			Tcmp3 = Ta;
+			break;
+
+		default:
+			break;
 	}
 
 	FOC_Output.Tcmp1 = Tcmp1;
@@ -342,8 +323,6 @@ void Current_PID_Calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_temp, 
 	current_pid_temp->I_Sum += ((*out_temp - temp) * current_pid_temp->B_Gain + current_pid_temp->I_Gain * error) * 0.0001f;
 }
 
-
-
 /**
  * @brief Execute one complete FOC control cycle
  * 
@@ -397,8 +376,7 @@ void foc_algorithm_step(void)
 	FOC_Interface_states.EKF_Interface[6] = FOC_Input.flux;
 
 	/* EKF output calculation */
-	stm32_ekf_Outputs_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],
-	                          &FOC_Interface_states.EKF_States[0]);
+	stm32_ekf_Outputs_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0], &FOC_Interface_states.EKF_States[0]);
 
 	/**
 	 * Step 7: Motor Parameter Identification
@@ -415,25 +393,20 @@ void foc_algorithm_step(void)
 	FOC_Interface_states.L_Ident_Interface[1] = Voltage_DQ.Vd;
 
 	/* Execute parameter identification outputs */
-	L_identification_Outputs_wrapper(&FOC_Interface_states.L_Ident_Interface[0],
-	                                 &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
+	L_identification_Outputs_wrapper(&FOC_Interface_states.L_Ident_Interface[0], &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
 
-	R_flux_identification_Outputs_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],
-	                                      &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
+	R_flux_identification_Outputs_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0], &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
 
-	/* Step 5: Space Vector PWM - Generate three-phase PWM duty cycles */
+	/* Step 8: Space Vector PWM - Generate three-phase PWM duty cycles */
 	SVPWM_Calc(Voltage_Alpha_Beta, FOC_Input.Udc, FOC_Input.Tpwm);
 
 	/* Update EKF state observer */
-	stm32_ekf_Update_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0],
-	                         &FOC_Interface_states.EKF_States[0]);
+	stm32_ekf_Update_wrapper(&FOC_Interface_states.EKF_Interface[0], &FOC_Output.EKF[0], &FOC_Interface_states.EKF_States[0]);
 
 	/* Update parameter identification states */
-	L_identification_Update_wrapper(&FOC_Interface_states.L_Ident_Interface[0],
-	                                &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
+	L_identification_Update_wrapper(&FOC_Interface_states.L_Ident_Interface[0], &FOC_Interface_states.L_Ident_Output, &FOC_Interface_states.L_Ident_States);
 
-	R_flux_identification_Update_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0],
-	                                     &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
+	R_flux_identification_Update_wrapper(&FOC_Interface_states.R_flux_Ident_Interface[0], &FOC_Interface_states.R_flux_Ident_Output[0], &FOC_Interface_states.R_flux_Ident_States);
 
 	/* Pack identified motor parameters for output */
 	FOC_Output.L_RF[0] = FOC_Interface_states.L_Ident_Output;
@@ -490,7 +463,8 @@ void foc_algorithm_initialize(void)
 		{
 			int_T i1;
 			real_T *dw_DSTATE = &FOC_Interface_states.EKF_States[0];
-			for (i1 = 0; i1 < 4; i1++) {
+			for (i1 = 0; i1 < 4; i1++)
+			{
 				dw_DSTATE[i1] = initVector[i1];
 			}
 		}
@@ -501,7 +475,8 @@ void foc_algorithm_initialize(void)
 		real_T initVector[1] = { 0 };
 		{
 			int_T i1;
-			for (i1 = 0; i1 < 1; i1++) {
+			for (i1 = 0; i1 < 1; i1++)
+			{
 				FOC_Interface_states.L_Ident_States = initVector[0];
 			}
 		}
@@ -512,7 +487,8 @@ void foc_algorithm_initialize(void)
 		real_T initVector[1] = { 0 };
 		{
 			int_T i1;
-			for (i1 = 0; i1 < 1; i1++) {
+			for (i1 = 0; i1 < 1; i1++)
+			{
 				FOC_Interface_states.R_flux_Ident_States = initVector[0];
 			}
 		}

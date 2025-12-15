@@ -2,7 +2,6 @@
 #include <stdint.h>
 #define __OLED_FONT_H_
 
-
 extern unsigned char Logo[];
 extern unsigned char fault[];
 extern char Hzk[][32];

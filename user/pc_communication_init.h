@@ -1,8 +1,7 @@
-#ifndef __PC_COMMUNICATION_INIT_H_
+#ifndef __PC_COMMUNICATION_INIT_H__
+#define __PC_COMMUNICATION_INIT_H__
+
 #include <stdint.h>
-#define __PC_COMMUNICATION_INIT_H_
-
-
 
 extern int32_t int_test1;
 extern int32_t int_test2;
@@ -26,7 +25,5 @@ extern float float_test9;
 extern float float_test10;
 
 extern void pc_communication_init(void);
-
-
 
 #endif

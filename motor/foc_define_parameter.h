@@ -1,9 +1,8 @@
 /**********************************
       
 **********************************/
-#ifndef __FOC_DEFINE_PARAMETER_H_
-#define __FOC_DEFINE_PARAMETER_H_
-
+#ifndef __FOC_DEFINE_PARAMETER_H__
+#define __FOC_DEFINE_PARAMETER_H__
 
 #define MOTOR_STARTUP_CURRENT   1.0f   //电机启动电流，根据自己实际负载设置 1.0
 #define SPEED_LOOP_CLOSE_RAD_S  50.0f  //速度环切入闭环的速度  单位: rad/s

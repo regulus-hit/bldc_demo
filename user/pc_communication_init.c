@@ -4,10 +4,6 @@
 #include "main.h"
 #include "pc_communication_init.h"
 
-
-
-
-
 int32_t int_test1 = 1;
 int32_t int_test2 = 2;
 int32_t int_test3 = 3;
@@ -43,6 +39,7 @@ extern int32_t ia_test,ib_test,ic_test;
 
 extern float theta_add;
 extern float Ia_test,Ib_test,Ic_test;
+
 void pc_communication_init(void)
 {
 	communication_init();

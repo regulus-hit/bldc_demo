@@ -21,10 +21,13 @@ void drv8301_spi_write(uint8_t address, uint16_t data)
 {
 	uint16_t send_data = 0;
 	uint8_t i;
+
 	send_data = (uint16_t)(address & 0x03);
 	send_data <<= 11;
 	send_data |= data;
+
 	DRV8301_CS_Clr();
+
 	for (i = 0; i < 16; i++)
 	{
 		DRV8301_SCLK_Set();
@@ -39,6 +42,7 @@ void drv8301_spi_write(uint8_t address, uint16_t data)
 		DRV8301_SCLK_Clr();
 		send_data <<= 1;
 	}
+
 	DRV8301_SCLK_Clr();
 	DRV8301_MOSI_Clr();
 
@@ -59,10 +63,13 @@ uint16_t drv8301_spi_read(uint8_t address)
 	uint16_t send_data = 0;
 	uint16_t receive_data = 0;
 	uint8_t i;
+
 	send_data = (uint16_t)(address & 0x03);
 	send_data <<= 11;
 	send_data |= 0x8000;
+
 	DRV8301_CS_Clr();
+
 	for (i = 0; i < 16; i++)
 	{
 		DRV8301_SCLK_Set();
@@ -77,12 +84,17 @@ uint16_t drv8301_spi_read(uint8_t address)
 		send_data <<= 1;
 		DRV8301_SCLK_Clr();
 	}
+
 	DRV8301_CS_Set();
+
 	send_data = (uint16_t)(address & 0x03);
 	send_data <<= 11;
 	send_data |= 0x8000;
+
 	send_data = 0;
+
 	DRV8301_CS_Clr();
+
 	for (i = 0; i < 16; i++)
 	{
 		DRV8301_SCLK_Set();
@@ -102,7 +114,9 @@ uint16_t drv8301_spi_read(uint8_t address)
 			receive_data |= 0x0001;
 		}
 	}
+
 	DRV8301_CS_Set();
+
 	return receive_data;
 }
 

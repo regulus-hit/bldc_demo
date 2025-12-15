@@ -44,9 +44,12 @@ void EXTI4_IRQHandler(void)
 {
 	if (EXTI_GetITStatus(KEY_1_EXTI_LINE) != RESET)
 	{
-		if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4) == Bit_SET) {
+		if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4) == Bit_SET)
+		{
 			key1_flag = 0;	/* Rising edge */
-		} else {
+		}
+		else
+		{
 			key1_flag = 1;	/* Falling edge - button pressed */
 		}
 		EXTI_ClearITPendingBit(KEY_1_EXTI_LINE);

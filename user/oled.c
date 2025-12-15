@@ -43,34 +43,34 @@ void OLED_Init(void)
 	OLED_RST_Clr();
 	Delay(10);
 	OLED_RST_Set();
-	OLED_WR_Byte(0xAE);//--turn off oled panel
-	OLED_WR_Byte(0x02);//---set low column address
-	OLED_WR_Byte(0x10);//---set high column address
-	OLED_WR_Byte(0x40);//--set start line address  Set Mapping RAM Display Start Line (0x00~0x3F)
-	OLED_WR_Byte(0x81);//--set contrast control register
-	OLED_WR_Byte(0xff); // Set SEG Output Current Brightness
-	OLED_WR_Byte(0xA1);//--Set SEG/Column Mapping     0xa0
-	OLED_WR_Byte(0xC8);//Set COM/Row Scan Direction   0xc0
-	OLED_WR_Byte(0xA6);//--set normal display
-	OLED_WR_Byte(0xA8);//--set multiplex ratio(1 to 64)
-	OLED_WR_Byte(0x3f);//--1/64 duty
-	OLED_WR_Byte(0xD3);//-set display offset	Shift Mapping RAM Counter (0x00~0x3F)
-	OLED_WR_Byte(0x00);//-not offset
-	OLED_WR_Byte(0xd5);//--set display clock divide ratio/oscillator frequency
-	OLED_WR_Byte(0x80);//--set divide ratio, Set Clock as 100 Frames/Sec
-	OLED_WR_Byte(0xD9);//--set pre-charge period
-	OLED_WR_Byte(0xF1);//Set Pre-Charge as 15 Clocks & Discharge as 1 Clock
-	OLED_WR_Byte(0xDA);//--set com pins hardware configuration
+	OLED_WR_Byte(0xAE);		//--Turn off OLED panel
+	OLED_WR_Byte(0x02);		//--Set low column address
+	OLED_WR_Byte(0x10);		//--Set high column address
+	OLED_WR_Byte(0x40);		//--Set start line address  Set Mapping RAM Display Start Line (0x00~0x3F)
+	OLED_WR_Byte(0x81);		//--Set contrast control register
+	OLED_WR_Byte(0xff);		//--Set SEG Output Current Brightness
+	OLED_WR_Byte(0xA1);		//--Set SEG/Column Mapping     0xa0
+	OLED_WR_Byte(0xC8);		//--Set COM/Row Scan Direction   0xc0
+	OLED_WR_Byte(0xA6);		//--Set normal display
+	OLED_WR_Byte(0xA8);		//--Set multiplex ratio(1 to 64)
+	OLED_WR_Byte(0x3f);		//--1/64 duty
+	OLED_WR_Byte(0xD3);		//--Set display offset	Shift Mapping RAM Counter (0x00~0x3F)
+	OLED_WR_Byte(0x00);		//--not offset
+	OLED_WR_Byte(0xd5);		//--Set display clock divide ratio/oscillator frequency
+	OLED_WR_Byte(0x80);		//--Set divide ratio, Set Clock as 100 Frames/Sec
+	OLED_WR_Byte(0xD9);		//--Set pre-charge period
+	OLED_WR_Byte(0xF1);		//--Set Pre-Charge as 15 Clocks & Discharge as 1 Clock
+	OLED_WR_Byte(0xDA);		//--Set com pins hardware configuration
 	OLED_WR_Byte(0x12);
-	OLED_WR_Byte(0xDB);//--set vcomh
-	OLED_WR_Byte(0x40);//Set VCOM Deselect Level
-	OLED_WR_Byte(0x20);//-Set Page Addressing Mode (0x00/0x01/0x02)
-	OLED_WR_Byte(0x02);//
-	OLED_WR_Byte(0x8D);//--set Charge Pump enable/disable
-	OLED_WR_Byte(0x14);//--set(0x10) disable
-	OLED_WR_Byte(0xA4);// Disable Entire Display On (0xa4/0xa5)
-	OLED_WR_Byte(0xA6);// Disable Inverse Display On (0xa6/a7) 
-	OLED_WR_Byte(0xAF);//--turn on oled panel
+	OLED_WR_Byte(0xDB);		//--Set vcomh
+	OLED_WR_Byte(0x40);		//--Set VCOM Deselect Level
+	OLED_WR_Byte(0x20);		//--Set Page Addressing Mode (0x00/0x01/0x02)
+	OLED_WR_Byte(0x02);		//
+	OLED_WR_Byte(0x8D);		//--Set Charge Pump enable/disable
+	OLED_WR_Byte(0x14);		//--Set(0x10) disable
+	OLED_WR_Byte(0xA4);		//--Disable Entire Display On (0xa4/0xa5)
+	OLED_WR_Byte(0xA6);		//--Disable Inverse Display On (0xa6/a7) 
+	OLED_WR_Byte(0xAF);		//--Turn on OLED panel
 	OLED_Clear();
 	
 	//OLED_Clear();

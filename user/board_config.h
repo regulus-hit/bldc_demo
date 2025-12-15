@@ -1,5 +1,5 @@
-#ifndef __BOARD_CONFIG_H_
-#define __BOARD_CONFIG_H_
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
 
 //UVW PWM define start
 #define PWM_TIM             TIM1

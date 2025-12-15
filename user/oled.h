@@ -2,8 +2,6 @@
 #include <stdint.h>
 #define __OLED_H_
 
-
-
 #define OLED_SCLK_Clr() GPIO_ResetBits(OLED_SPIx_SCK_GPIO_PORT,OLED_SPIx_SCK_PIN)//CLK
 #define OLED_SCLK_Set() GPIO_SetBits(OLED_SPIx_SCK_GPIO_PORT,OLED_SPIx_SCK_PIN)
 
@@ -16,7 +14,6 @@
 #define OLED_DC_Clr() GPIO_ResetBits(OLED_DC_GPIO_PORT,OLED_DC_PIN)//DC
 #define OLED_DC_Set() GPIO_SetBits(OLED_DC_GPIO_PORT,OLED_DC_PIN)
  		     
-
 #define OLED_CMD  0	//写命令
 #define OLED_DATA 1	//写数据
 #define SIZE 16

@@ -1,5 +1,5 @@
-#ifndef __HALL_SENSOR_H_
-#define __HALL_SENSOR_H_
+#ifndef __HALL_SENSOR_H__
+#define __HALL_SENSOR_H__
 
 #include <stdint.h>
 

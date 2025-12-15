@@ -320,72 +320,6 @@ void ADC_IRQHandler(void)
 	}
 }
 
-////发给vofa上位机
-//void send_PC(float wave1,float wave2,float wave3,float wave4)
-//{
-//	tempFloat[0] = wave1;    //(float)转成浮点数
-//	tempFloat[1] = wave2;
-//	tempFloat[2] = wave3;
-//	tempFloat[3] = wave4;
-//	memcpy(tempData, (uint8_t *)tempFloat, sizeof(tempFloat));//通过拷贝把数据重新整理
-//	 
-//	//1	
-//	USART_SendData(USART2, tempData[0]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[1]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[2]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[3]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-//  //2	
-//	USART_SendData(USART2, tempData[4]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[5]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[6]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[7]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-//	//3	
-//	USART_SendData(USART2, tempData[8]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[9]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[10]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[11]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-//	//4	
-//	USART_SendData(USART2, tempData[12]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[13]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[14]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, tempData[15]);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-
-//	//尾	
-//	USART_SendData(USART2, 0x00);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, 0x00);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, 0x80);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//	USART_SendData(USART2, 0x7F);while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));	
-//}
-
-//// 发送给VOFA上位机
-//void send_PC(float wave1, float wave2, float wave3, float wave4)
-//{
-//    //static uint8_t wave_index = 0;  // 静态变量记录当前该发送哪个波形
-//    
-//    // 将4个波形数据存入数组
-//    tempFloat[0] = wave1;
-//    tempFloat[1] = wave2;
-//    tempFloat[2] = wave3;
-//    tempFloat[3] = wave4;
-//    memcpy(tempData, (uint8_t *)tempFloat, sizeof(tempFloat));
-//	
-//		for(uint8_t i=0;i<16;i++){
-
-//					USART_SendData(USART2, tempData[i]);
-//					while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-//		}
-//    
-//    // 发送尾数据（固定4个字节）
-//    USART_SendData(USART2, 0x00); while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));    
-//    USART_SendData(USART2, 0x00); while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));    
-//    USART_SendData(USART2, 0x80); while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));    
-//    USART_SendData(USART2, 0x7F); while(RESET == USART_GetFlagStatus(USART2, USART_FLAG_TC));
-//    
-//    // 更新索引，循环发送0,1,2,3
-//    //wave_index = (wave_index + 1) % 2;
-//}
-
-
 /**
  * @brief Send waveform data to PC via UART with DMA
  * 
@@ -402,7 +336,8 @@ void ADC_IRQHandler(void)
 void send_PC(float wave1, float wave2, float wave3, float wave4)
 {
 	/* Skip if previous DMA transfer still in progress */
-	if (dma_tx_busy) {
+	if (dma_tx_busy)
+	{
 		return;
 	}
 
