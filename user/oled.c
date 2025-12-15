@@ -80,6 +80,7 @@ void OLED_Init(void)
 	
 	/* Hardware reset sequence */
 	OLED_RST_Set();
+//	Delay(100);
 	OLED_RST_Clr();
 	Delay(10);
 	OLED_RST_Set();
