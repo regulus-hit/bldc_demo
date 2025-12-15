@@ -23,6 +23,12 @@ float Ia_test, Ib_test, Ic_test;
 /* DC bus voltage */
 float Vbus;
 
+#ifdef ENABLE_VBUS_FILTERING
+/* Filtered DC bus voltage for improved SVPWM accuracy */
+float Vbus_filtered = 0.0f;
+uint8_t Vbus_filter_initialized = 0;
+#endif
+
 uint16_t ADC1ConvertedValue[5];
 uint16_t i = 0;
 
@@ -119,6 +125,22 @@ void motor_run(void)
 	
 	/* Convert ADC values to real physical units */
 	Vbus = vbus_temp * VBUS_CONVERSION_FACTOR;						/* Convert to actual voltage via voltage divider */
+	
+#ifdef ENABLE_VBUS_FILTERING
+	/* Apply low-pass filter to bus voltage to reduce switching ripple
+	 * First-order IIR filter: Vbus_filtered = alpha * Vbus_new + (1-alpha) * Vbus_old
+	 * This reduces SVPWM calculation errors from DC link capacitor ripple */
+	if (!Vbus_filter_initialized)
+	{
+		Vbus_filtered = Vbus;  /* Initialize filter with first measurement */
+		Vbus_filter_initialized = 1;
+	}
+	else
+	{
+		Vbus_filtered = VBUS_FILTER_ALPHA * Vbus + (1.0f - VBUS_FILTER_ALPHA) * Vbus_filtered;
+	}
+#endif
+	
 	Ia = ia_temp * SAMPLE_CURR_CON_FACTOR;							/* Convert to actual current via shunt and amp gain */
 	Ib = ib_temp * SAMPLE_CURR_CON_FACTOR;							/* Convert to actual current via shunt and amp gain */
 	Ic = -Ia - Ib;													/* Calculate phase C current using Kirchhoff's law */
@@ -182,6 +204,23 @@ void motor_run(void)
 		FOC_Input.Id_ref = 0.0f;				/* Zero d-axis current for maximum torque/amp */
 		Speed_Fdk = hall_speed * 2.0f * PI;		/* Speed feedback from Hall sensors */
 		FOC_Input.Iq_ref = Speed_Pid_Out;		/* Iq from speed controller */
+		
+#ifdef ENABLE_FIELD_WEAKENING
+		/* Field-Weakening Control: Inject negative Id current at high speeds
+		 * This extends the speed range by weakening the rotor flux
+		 * Id_fw = -K_fw * (|speed| - base_speed) when speed > base_speed */
+		float speed_abs = fabs(hall_speed * 2.0f * PI);
+		if (speed_abs > FIELD_WEAKENING_BASE_SPEED)
+		{
+			float Id_fw = -FIELD_WEAKENING_GAIN * (speed_abs - FIELD_WEAKENING_BASE_SPEED);
+			/* Limit negative Id to prevent demagnetization */
+			if (Id_fw < FIELD_WEAKENING_MAX_NEG_ID)
+			{
+				Id_fw = FIELD_WEAKENING_MAX_NEG_ID;
+			}
+			FOC_Input.Id_ref = Id_fw;
+		}
+#endif
 	}
 	else
 	{
@@ -206,6 +245,23 @@ void motor_run(void)
 		FOC_Input.Id_ref = 0.0f;			/* Zero d-axis current for SPMSM */
 		Speed_Fdk = FOC_Output.EKF[2];		/* Speed from EKF observer */
 		FOC_Input.Iq_ref = Speed_Pid_Out;	/* Iq from speed controller */
+		
+#ifdef ENABLE_FIELD_WEAKENING
+		/* Field-Weakening Control: Inject negative Id current at high speeds
+		 * This extends the speed range by weakening the rotor flux
+		 * Id_fw = -K_fw * (|speed| - base_speed) when speed > base_speed */
+		float speed_abs = fabs(FOC_Output.EKF[2]);
+		if (speed_abs > FIELD_WEAKENING_BASE_SPEED)
+		{
+			float Id_fw = -FIELD_WEAKENING_GAIN * (speed_abs - FIELD_WEAKENING_BASE_SPEED);
+			/* Limit negative Id to prevent demagnetization */
+			if (Id_fw < FIELD_WEAKENING_MAX_NEG_ID)
+			{
+				Id_fw = FIELD_WEAKENING_MAX_NEG_ID;
+			}
+			FOC_Input.Id_ref = Id_fw;
+		}
+#endif
 	}
 	else
 	{
@@ -226,7 +282,11 @@ void motor_run(void)
 	/* Prepare FOC algorithm inputs */
 	FOC_Input.Id_ref = 0;					/* Zero d-axis current for Surface PM motors */
 	FOC_Input.Tpwm = PWM_TIM_PULSE_TPWM;	/* PWM period for SVPWM calculations */
-	FOC_Input.Udc = Vbus;					/* DC bus voltage */
+#ifdef ENABLE_VBUS_FILTERING
+	FOC_Input.Udc = Vbus_filtered;			/* Use filtered DC bus voltage for improved SVPWM accuracy */
+#else
+	FOC_Input.Udc = Vbus;					/* Use unfiltered DC bus voltage (raw measurement) */
+#endif
 
 	/* Motor parameters for state observer and current control */
 	FOC_Input.Rs = Rs;						/* Stator resistance */
