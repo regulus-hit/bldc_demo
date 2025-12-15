@@ -128,6 +128,6 @@
  * Typical: PI/3 (60 degrees) - one Hall sector */
 #define HYBRID_HALL_MAX_POSITION_ERROR  1.047f  /* PI/3 radians */
 
-#endif
+#endif  /* HYBRID_HALL_EKF_SELECT */
 
-#endif
+#endif  /* __FOC_DEFINE_PARAMETER_H__ */

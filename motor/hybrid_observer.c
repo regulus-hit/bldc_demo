@@ -39,11 +39,13 @@ void hybrid_observer_initialize(void)
  */
 float normalize_angle(float angle)
 {
-	/* Use fmodf for floating point modulo */
-	angle = fmodf(angle, MATH_2PI);
-	
-	/* Handle negative angles */
-	if (angle < 0.0f)
+	/* Normalize to [0, 2*PI] range using simple conditional subtraction
+	 * More efficient than fmodf for embedded real-time systems */
+	while (angle >= MATH_2PI)
+	{
+		angle -= MATH_2PI;
+	}
+	while (angle < 0.0f)
 	{
 		angle += MATH_2PI;
 	}
@@ -70,12 +72,14 @@ float angle_difference(float angle1, float angle2)
 {
 	float diff = angle2 - angle1;
 	
-	/* Normalize to [-PI, PI] range */
-	while (diff > MATH_PI)
+	/* Normalize to [-PI, PI] range
+	 * Single conditional check assuming properly normalized input angles
+	 * This guarantees bounded execution time */
+	if (diff > MATH_PI)
 	{
 		diff -= MATH_2PI;
 	}
-	while (diff < -MATH_PI)
+	else if (diff < -MATH_PI)
 	{
 		diff += MATH_2PI;
 	}
