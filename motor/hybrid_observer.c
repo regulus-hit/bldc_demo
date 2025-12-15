@@ -31,16 +31,19 @@ void hybrid_observer_initialize(void)
 /**
  * @brief Normalize angle to [0, 2*PI] range
  * 
- * Uses modulo arithmetic with fmod for floating point.
- * Handles negative angles correctly.
+ * Normalizes angle using bounded subtraction/addition for deterministic timing.
+ * In normal operation, angles from EKF/Hall are already close to [0, 2π],
+ * so this typically executes 0-2 iterations maximum.
  * 
- * @param angle Input angle (rad)
+ * @param angle Input angle (rad), expected to be within reasonable range
  * @return Normalized angle in [0, 2*PI] range
  */
 float normalize_angle(float angle)
 {
 	/* Normalize to [0, 2*PI] range using simple conditional subtraction
-	 * More efficient than fmodf for embedded real-time systems */
+	 * More efficient than fmodf for embedded real-time systems
+	 * In practice, angles from FOC system are already near [0, 2π] range,
+	 * so this executes at most 1-2 iterations */
 	while (angle >= MATH_2PI)
 	{
 		angle -= MATH_2PI;
@@ -59,13 +62,17 @@ float normalize_angle(float angle)
  * Computes the shortest signed difference from angle1 to angle2.
  * Result is in range [-PI, PI] to represent the shortest rotation direction.
  * 
+ * **IMPORTANT**: This function assumes input angles are already normalized
+ * to [0, 2π] range. In the hybrid observer, both EKF position and Hall position
+ * are maintained in normalized form, so this assumption always holds.
+ * 
  * Example:
  * - angle1 = 0.1 rad, angle2 = 6.2 rad (near 2*PI)
  * - Direct difference: 6.1 rad clockwise
  * - Shortest path: -0.183 rad counterclockwise (wraps through 0)
  * 
- * @param angle1 First angle (rad)
- * @param angle2 Second angle (rad)
+ * @param angle1 First angle (rad), must be in [0, 2π] range
+ * @param angle2 Second angle (rad), must be in [0, 2π] range
  * @return Shortest angular difference (rad), range [-PI, PI]
  */
 float angle_difference(float angle1, float angle2)
@@ -73,8 +80,8 @@ float angle_difference(float angle1, float angle2)
 	float diff = angle2 - angle1;
 	
 	/* Normalize to [-PI, PI] range
-	 * Single conditional check assuming properly normalized input angles
-	 * This guarantees bounded execution time */
+	 * Single conditional check assuming properly normalized input angles [0, 2π]
+	 * This guarantees deterministic bounded execution time */
 	if (diff > MATH_PI)
 	{
 		diff -= MATH_2PI;

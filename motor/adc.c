@@ -308,7 +308,7 @@ void motor_run(void)
 		FOC_Output.EKF[3] + myref,  /* EKF position estimate (rad) */
 		FOC_Output.EKF[2],           /* EKF speed estimate (rad/s) */
 		hall_angle,                  /* Hall sensor position (rad) */
-		hall_speed * MATH_2PI,       /* Hall sensor speed (rad/s) */
+		hall_speed * MATH_2PI,       /* Hall speed converted: Hz → rad/s (mechanical * 2π) */
 		&fused_position,             /* Output: fused position */
 		&fused_speed                 /* Output: fused speed */
 	);
