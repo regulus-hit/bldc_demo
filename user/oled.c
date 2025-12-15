@@ -1,84 +1,126 @@
+/**********************************
+ * OLED Display Low-Level Driver
+ * SH1106-based 128x64 monochrome OLED display control
+ **********************************/
 #include "main.h"
 #include "oled.h"
 
-uint8_t display_buff[8][128] = {0};
-int8_t display_data_buff[128];
-uint8_t display_data_buff_cnt=0;
-uint8_t display_data_flag=0;
-void OLED_WR_Byte(uint8_t dat)
-{	
-	uint8_t i;			    
-	for(i=0;i<8;i++)
-	{			  
-		OLED_SCLK_Clr();
-		if(dat&0x80)
-			OLED_SDIN_Set();
-		else 
-			OLED_SDIN_Clr();
-		dat<<=1;
-		OLED_SCLK_Set();	   
-	}				 		  
-} 
+uint8_t display_buff[8][128] = {0};     /* Display buffer: 8 pages x 128 columns */
+int8_t display_data_buff[128];          /* Waveform display buffer */
+uint8_t display_data_buff_cnt = 0;
+uint8_t display_data_flag = 0;
 
-void OLED_Clear(void)  
-{  
-	uint8_t i,n;
-	OLED_DC_Clr();
-	for(i=0;i<8;i++)  
-	{  
-		OLED_WR_Byte (0xb0+i);   
-		OLED_WR_Byte (0x00);     
-		OLED_WR_Byte (0x10);     
-		OLED_DC_Set();
-		for(n=0;n<128;n++)OLED_WR_Byte(0); 
-		OLED_DC_Clr();
-	} 
+/**
+ * @brief Write One Byte to OLED via Bit-Banged SPI
+ * 
+ * Sends 8 bits of data/command to the OLED controller using software SPI.
+ * MSB is transmitted first. Clock idles low, data is latched on rising edge.
+ * 
+ * @param dat Byte to transmit (data or command)
+ */
+void OLED_WR_Byte(uint8_t dat)
+{
+	uint8_t i;
+	for (i = 0; i < 8; i++)
+	{
+		OLED_SCLK_Clr();
+		if (dat & 0x80)
+		{
+			OLED_SDIN_Set();
+		}
+		else
+		{
+			OLED_SDIN_Clr();
+		}
+		dat <<= 1;
+		OLED_SCLK_Set();
+	}
 }
 
+/**
+ * @brief Clear OLED Display
+ * 
+ * Clears all 8 pages (64 rows) of the display by writing zeros to all pixels.
+ * The display is organized as 8 pages of 8 rows each, 128 columns wide.
+ */
+void OLED_Clear(void)
+{
+	uint8_t i, n;
+	OLED_DC_Clr();  /* Command mode */
+	for (i = 0; i < 8; i++)
+	{
+		OLED_WR_Byte(0xb0 + i);  /* Set page address */
+		OLED_WR_Byte(0x00);      /* Set lower column address */
+		OLED_WR_Byte(0x10);      /* Set higher column address */
+		OLED_DC_Set();           /* Data mode */
+		for (n = 0; n < 128; n++)
+		{
+			OLED_WR_Byte(0);
+		}
+		OLED_DC_Clr();           /* Back to command mode */
+	}
+}
+
+/**
+ * @brief Initialize OLED Display Controller
+ * 
+ * Performs hardware reset and sends initialization sequence to SH1106:
+ * - Display off during configuration
+ * - Set contrast to maximum
+ * - Configure scan direction and segment mapping
+ * - Set multiplex ratio (1:64)
+ * - Configure display clock and timing
+ * - Enable charge pump for internal voltage generation
+ * - Turn display on
+ * 
+ * Must be called before any display operations.
+ */
 void OLED_Init(void)
 {
 	
+	/* Hardware reset sequence */
 	OLED_RST_Set();
-	//Delay(100);
 	OLED_RST_Clr();
 	Delay(10);
 	OLED_RST_Set();
-	OLED_WR_Byte(0xAE);		//--Turn off OLED panel
-	OLED_WR_Byte(0x02);		//--Set low column address
-	OLED_WR_Byte(0x10);		//--Set high column address
-	OLED_WR_Byte(0x40);		//--Set start line address  Set Mapping RAM Display Start Line (0x00~0x3F)
-	OLED_WR_Byte(0x81);		//--Set contrast control register
-	OLED_WR_Byte(0xff);		//--Set SEG Output Current Brightness
-	OLED_WR_Byte(0xA1);		//--Set SEG/Column Mapping     0xa0
-	OLED_WR_Byte(0xC8);		//--Set COM/Row Scan Direction   0xc0
-	OLED_WR_Byte(0xA6);		//--Set normal display
-	OLED_WR_Byte(0xA8);		//--Set multiplex ratio(1 to 64)
-	OLED_WR_Byte(0x3f);		//--1/64 duty
-	OLED_WR_Byte(0xD3);		//--Set display offset	Shift Mapping RAM Counter (0x00~0x3F)
-	OLED_WR_Byte(0x00);		//--not offset
-	OLED_WR_Byte(0xd5);		//--Set display clock divide ratio/oscillator frequency
-	OLED_WR_Byte(0x80);		//--Set divide ratio, Set Clock as 100 Frames/Sec
-	OLED_WR_Byte(0xD9);		//--Set pre-charge period
-	OLED_WR_Byte(0xF1);		//--Set Pre-Charge as 15 Clocks & Discharge as 1 Clock
-	OLED_WR_Byte(0xDA);		//--Set com pins hardware configuration
-	OLED_WR_Byte(0x12);
-	OLED_WR_Byte(0xDB);		//--Set vcomh
-	OLED_WR_Byte(0x40);		//--Set VCOM Deselect Level
-	OLED_WR_Byte(0x20);		//--Set Page Addressing Mode (0x00/0x01/0x02)
-	OLED_WR_Byte(0x02);		//
-	OLED_WR_Byte(0x8D);		//--Set Charge Pump enable/disable
-	OLED_WR_Byte(0x14);		//--Set(0x10) disable
-	OLED_WR_Byte(0xA4);		//--Disable Entire Display On (0xa4/0xa5)
-	OLED_WR_Byte(0xA6);		//--Disable Inverse Display On (0xa6/a7) 
-	OLED_WR_Byte(0xAF);		//--Turn on OLED panel
+
+	/* Initialization command sequence */
+	OLED_WR_Byte(0xAE);  /* Display off */
+	OLED_WR_Byte(0x02);  /* Set low column address */
+	OLED_WR_Byte(0x10);  /* Set high column address */
+	OLED_WR_Byte(0x40);  /* Set start line address (0x00-0x3F) */
+	OLED_WR_Byte(0x81);  /* Set contrast control */
+	OLED_WR_Byte(0xff);  /* Maximum contrast */
+	OLED_WR_Byte(0xA1);  /* Set segment remap (A0=normal, A1=reverse) */
+	OLED_WR_Byte(0xC8);  /* Set COM output scan direction (C0=normal, C8=reverse) */
+	OLED_WR_Byte(0xA6);  /* Normal display (not inverted) */
+	OLED_WR_Byte(0xA8);  /* Set multiplex ratio */
+	OLED_WR_Byte(0x3f);  /* 1/64 duty (64 rows) */
+	OLED_WR_Byte(0xD3);  /* Set display offset */
+	OLED_WR_Byte(0x00);  /* No offset */
+	OLED_WR_Byte(0xd5);  /* Set display clock divide ratio/oscillator frequency */
+	OLED_WR_Byte(0x80);  /* Default divide ratio, 100 frames/sec */
+	OLED_WR_Byte(0xD9);  /* Set pre-charge period */
+	OLED_WR_Byte(0xF1);  /* Pre-charge: 15 clocks, discharge: 1 clock */
+	OLED_WR_Byte(0xDA);  /* Set COM pins hardware configuration */
+	OLED_WR_Byte(0x12);  /* Alternative COM pin config, disable remap */
+	OLED_WR_Byte(0xDB);  /* Set VCOMH deselect level */
+	OLED_WR_Byte(0x40);  /* ~0.77 x VCC */
+	OLED_WR_Byte(0x20);  /* Set memory addressing mode */
+	OLED_WR_Byte(0x02);  /* Page addressing mode */
+	OLED_WR_Byte(0x8D);  /* Charge pump setting */
+	OLED_WR_Byte(0x14);  /* Enable charge pump */
+	OLED_WR_Byte(0xA4);  /* Normal display (not all pixels on) */
+	OLED_WR_Byte(0xA6);  /* Normal display (not inverted) */
+	OLED_WR_Byte(0xAF);  /* Display on */
+
 	OLED_Clear();
-	
-	//OLED_Clear();
+
+	/* Initialize display flags */
 	usb_open_display_flag = 1;
 	data_upload_display_flag = 0;
-	
 	motor_run_display_flag = 0;
-	display_static_flag=1;
+	display_static_flag = 1;
 	init_dispaly_flag = 1;
 }
 
