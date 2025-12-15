@@ -58,7 +58,7 @@ void motor_stop(void)
  * This function is called at 100Hz from the SysTick interrupt handler.
  * It manages motor state transitions and speed adjustments based on user input.
  */
-void low_control_task(void)
+void lowfreq_control_task(void)
 {
 	/* Check if ADC offset calibration is complete */
 	if (get_offset_flag == 2)
@@ -184,7 +184,7 @@ void SysTick_Handler(void)
 	hz_100_cnt++;
 	if (hz_100_cnt == 10)
 	{
-		low_control_task();
+		lowfreq_control_task();
 		TimingDelay_Decrement();
 		hz_100_cnt = 0;
 	}
