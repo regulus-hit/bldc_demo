@@ -439,42 +439,45 @@ void hardware_adc_init(void)
 
 	/* ADC  config start */
 
+	/* Configure ADC input pins as analog */
 	GPIO_StructInit(&GPIO_InitStructure);
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 
 	GPIO_InitStructure.GPIO_Pin = VBUS_ADC_PIN;
-	GPIO_Init(VBUS_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(VBUS_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = A_CURRENT_ADC_PIN;
-	GPIO_Init(A_CURRENT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(A_CURRENT_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = B_CURRENT_ADC_PIN;
-	GPIO_Init(B_CURRENT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(B_CURRENT_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = TOTAL_CURRENT_ADC_PIN;
-	GPIO_Init(TOTAL_CURRENT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(TOTAL_CURRENT_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = TEMPERATURE_ADC_PIN;
-	GPIO_Init(TEMPERATURE_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(TEMPERATURE_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = U_VOLT_ADC_PIN;
-	GPIO_Init(U_VOLT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(U_VOLT_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = V_VOLT_ADC_PIN;
-	GPIO_Init(V_VOLT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(V_VOLT_ADC_GPIO_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = W_VOLT_ADC_PIN;
-	GPIO_Init(W_VOLT_ADC_GPIO_PORT,&GPIO_InitStructure);
+	GPIO_Init(W_VOLT_ADC_GPIO_PORT, &GPIO_InitStructure);
+
+	/* Configure ADC peripheral */
 	ADC_DeInit();
 
 	ADC_StructInit(&ADC_InitStructure);
 	ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
 	ADC_InitStructure.ADC_ScanConvMode = ENABLE;
-	ADC_InitStructure.ADC_ExternalTrigConv =ADC_ExternalTrigConv_T1_CC1;
-	ADC_InitStructure.ADC_ExternalTrigConvEdge =ADC_ExternalTrigConvEdge_None;
+	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+	ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
 	ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
-	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;;
+	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
 	ADC_InitStructure.ADC_NbrOfConversion = 4;
 
 	ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
@@ -485,40 +488,50 @@ void hardware_adc_init(void)
 	ADC_CommonInit(&ADC_CommonInitStructure);
 	ADC_Init(SAMPLE_ADC, &ADC_InitStructure);
 
-	ADC_InjectedSequencerLengthConfig(SAMPLE_ADC,4);
+	/* Configure injected channels (triggered by PWM for FOC) */
+	ADC_InjectedSequencerLengthConfig(SAMPLE_ADC, 4);
 
-	ADC_ExternalTrigInjectedConvConfig(SAMPLE_ADC,ADC_ExternalTrigInjecConv_T1_CC4);
-	ADC_ExternalTrigInjectedConvEdgeConfig(SAMPLE_ADC,ADC_ExternalTrigInjecConvEdge_Rising);
+	ADC_ExternalTrigInjectedConvConfig(SAMPLE_ADC, ADC_ExternalTrigInjecConv_T1_CC4);
+	ADC_ExternalTrigInjectedConvEdgeConfig(SAMPLE_ADC, ADC_ExternalTrigInjecConvEdge_Rising);
 
-	ADC_InjectedChannelConfig(SAMPLE_ADC,VBUS_ADC_CHANNEL,1,ADC_SampleTime_15Cycles);
-	ADC_InjectedChannelConfig(SAMPLE_ADC,A_CURRENT_ADC_CHANNEL,2,ADC_SampleTime_15Cycles);
-	ADC_InjectedChannelConfig(SAMPLE_ADC,B_CURRENT_ADC_CHANNEL,3,ADC_SampleTime_15Cycles);
-	ADC_InjectedChannelConfig(SAMPLE_ADC,TOTAL_CURRENT_ADC_CHANNEL,4,ADC_SampleTime_15Cycles);
+	ADC_InjectedChannelConfig(SAMPLE_ADC, VBUS_ADC_CHANNEL, 1, ADC_SampleTime_15Cycles);
+	ADC_InjectedChannelConfig(SAMPLE_ADC, A_CURRENT_ADC_CHANNEL, 2, ADC_SampleTime_15Cycles);
+	ADC_InjectedChannelConfig(SAMPLE_ADC, B_CURRENT_ADC_CHANNEL, 3, ADC_SampleTime_15Cycles);
+	ADC_InjectedChannelConfig(SAMPLE_ADC, TOTAL_CURRENT_ADC_CHANNEL, 4, ADC_SampleTime_15Cycles);
 
+	/* Configure regular channels (converted via DMA) */
 	ADC_RegularChannelConfig(SAMPLE_ADC, U_VOLT_ADC_CHANNEL, 1, ADC_SampleTime_15Cycles);
 	ADC_RegularChannelConfig(SAMPLE_ADC, V_VOLT_ADC_CHANNEL, 2, ADC_SampleTime_15Cycles);
 	ADC_RegularChannelConfig(SAMPLE_ADC, W_VOLT_ADC_CHANNEL, 3, ADC_SampleTime_15Cycles);
 	ADC_RegularChannelConfig(SAMPLE_ADC, TEMPERATURE_ADC_CHANNEL, 4, ADC_SampleTime_15Cycles);
 
+	/* Enable DMA for regular channels */
 	ADC_DMARequestAfterLastTransferCmd(SAMPLE_ADC, ENABLE);
 	ADC_DMACmd(SAMPLE_ADC, ENABLE);
 
-
+	/* Enable interrupt for injected channels (critical for FOC timing) */
 	ADC_ITConfig(SAMPLE_ADC, ADC_IT_JEOC, ENABLE);
 	ADC_ClearFlag(SAMPLE_ADC, ADC_FLAG_JEOC);
-	ADC_Cmd(SAMPLE_ADC,ENABLE);
+	ADC_Cmd(SAMPLE_ADC, ENABLE);
 	ADC_SoftwareStartConv(SAMPLE_ADC);
-
-	/* ADC  config end */
 }
 
+/**
+ * @brief Initialize External Interrupts for User Buttons
+ * 
+ * Configures GPIO pins and EXTI lines for three user control buttons:
+ * - KEY1: Rising and falling edge triggered (for press/release detection)
+ * - KEY2: Falling edge triggered (speed decrease)
+ * - KEY3: Falling edge triggered (speed increase)
+ * 
+ * Button interrupts allow responsive user input for motor control.
+ */
 void hardware_exti_button_init(void)
 {
-	GPIO_InitTypeDef	GPIO_InitStructure;
-	EXTI_InitTypeDef	EXTI_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
+	EXTI_InitTypeDef EXTI_InitStructure;
 
-	/* EXTI button config start */
-
+	/* Configure button GPIO pins as inputs */
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -532,26 +545,33 @@ void hardware_exti_button_init(void)
 	GPIO_InitStructure.GPIO_Pin = KEY_3_PIN;
 	GPIO_Init(KEY_3_GPIO_PORT, &GPIO_InitStructure);
 
+	/* Connect GPIO pins to EXTI lines */
 	SYSCFG_EXTILineConfig(KEY_1_EXTI_GPIO_PORT, KEY_1_EXTI_SOURCE);
 	SYSCFG_EXTILineConfig(KEY_2_EXTI_GPIO_PORT, KEY_2_EXTI_SOURCE);
 	SYSCFG_EXTILineConfig(KEY_3_EXTI_GPIO_PORT, KEY_3_EXTI_SOURCE);
 
-	//EXTI_InitStructure.EXTI_Line = KEY_1_EXTI_LINE|KEY_2_EXTI_LINE|KEY_3_EXTI_LINE;
-	EXTI_InitStructure.EXTI_Line = KEY_2_EXTI_LINE|KEY_3_EXTI_LINE;
+	/* Configure KEY2 and KEY3 for falling edge (button press) */
+	EXTI_InitStructure.EXTI_Line = KEY_2_EXTI_LINE | KEY_3_EXTI_LINE;
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 
+	/* Configure KEY1 for both edges (press and release detection) */
 	EXTI_InitStructure.EXTI_Line = KEY_1_EXTI_LINE;
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling; 
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
-
-	/* EXTI button config end */
 }
 
+/**
+ * @brief Initialize USART2 DMA for Data Transmission
+ * 
+ * Configures DMA for USART2 transmit to enable non-blocking data transfer.
+ * Used for sending motor telemetry data to PC without blocking FOC control loop.
+ * DMA automatically transfers data buffer to USART, freeing CPU for control tasks.
+ */
 void hardware_usart2_dma_init(void)
 {
 	DMA_InitTypeDef DMA_USART2_TX_InitStructure;
@@ -564,9 +584,9 @@ void hardware_usart2_dma_init(void)
 
 	DMA_USART2_TX_InitStructure.DMA_Channel = USART2_TX_DMA_CHANNEL;
 	DMA_USART2_TX_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->DR;
-	DMA_USART2_TX_InitStructure.DMA_Memory0BaseAddr = (uint32_t)0; // 将在运行时设置
+	DMA_USART2_TX_InitStructure.DMA_Memory0BaseAddr = (uint32_t)0;  /* Set at runtime */
 	DMA_USART2_TX_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-	DMA_USART2_TX_InitStructure.DMA_BufferSize = 0; // 将在运行时设置
+	DMA_USART2_TX_InitStructure.DMA_BufferSize = 0;  /* Set at runtime */
 	DMA_USART2_TX_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_USART2_TX_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_USART2_TX_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -579,91 +599,110 @@ void hardware_usart2_dma_init(void)
 	DMA_USART2_TX_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 
 	DMA_Init(USART2_TX_DMA_STREAM, &DMA_USART2_TX_InitStructure);
-
-	/* USART2 DMA config end */
 }
 
+/**
+ * @brief Initialize Interrupt Priorities (NVIC)
+ * 
+ * Configures nested vectored interrupt controller priorities for all interrupts:
+ * - Priority group 2: 2 bits for preemption, 2 bits for sub-priority
+ * 
+ * Interrupt Priority Hierarchy (lower number = higher priority):
+ * 1. ADC (Priority 1): Highest - critical for FOC control loop timing
+ * 2. Hall Timer (Priority 2): High - rotor position/speed feedback
+ * 3. External Interrupts (Priority 3): Low - user button inputs
+ * 4. DMA (Priority 3): Low - data transfer completion
+ * 
+ * This priority scheme ensures real-time motor control is never interrupted
+ * by non-critical tasks.
+ */
 void hardware_interrupt_init(void)
 {
-	/* Interrupt priority config start */
-
+	/* Configure priority grouping */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
-	/*
-	NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_TIM10_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-	*/
-
+	/* ADC interrupt: Highest priority for FOC control */
 	NVIC_InitStructure.NVIC_IRQChannel = ADC_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+	/* External interrupt line 2 (KEY3 - speed increase) */
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+	/* External interrupt line 4 (KEY1 - start/stop/direction) */
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+	/* External interrupt lines 5-9 (KEY2 - speed decrease) */
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+	/* Hall sensor timer interrupt */
 	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
-	/*
-	NVIC_InitStructure.NVIC_IRQChannel = COM_TASK_TIM_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-	*/
-
+	/* USB OTG interrupt: Very high priority for USB communication */
 	NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+	/* USART2 DMA interrupt: Medium priority for telemetry data */
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_TX_DMA_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;  // 中等优先级
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
 #ifdef __ICCARM__
+	/* SysTick interrupt: Low priority for timing tasks */
 	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
-
-	/* Interrupt priority config end */
-
 }
 
+/**
+ * @brief Master Hardware Initialization Function
+ * 
+ * Initializes all hardware peripherals in correct sequence:
+ * 1. System clocks and SysTick timer
+ * 2. Hall sensor interface for position feedback
+ * 3. DRV8301 gate driver GPIO
+ * 4. OLED display interface
+ * 5. LED indicator
+ * 6. PWM timer for motor control
+ * 7. DMA for ADC and USART
+ * 8. ADC for current/voltage sensing
+ * 9. External interrupts for user buttons
+ * 10. USART2 DMA for telemetry
+ * 11. Interrupt priorities (NVIC)
+ * 
+ * Must be called once at system startup before main loop.
+ */
 void hard_init(void)
 {
 	hardware_clock_init();
 	hardware_hall_sensor_init();
-//	hardware_communication_init();
+	/* hardware_communication_init(); */  /* Optional communication timer */
 	hardware_drv8301_init();
 	hardware_oled_screen_init();
 	hardware_led_indicator_init();
@@ -672,8 +711,7 @@ void hard_init(void)
 	hardware_adc_init();
 	hardware_exti_button_init();
 	hardware_usart2_dma_init();
-//	communication_init();				/* USB communication */
+	/* communication_init(); */  /* Optional: USB communication initialization */
 
 	hardware_interrupt_init();
-
 }
