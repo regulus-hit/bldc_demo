@@ -611,14 +611,25 @@ void stm32_ekf_Update_wrapper(const real32_T *u,
 	K_3_1 = P_pred_3_1 * H_1_1;
 
 	/* Second: K = temp * S^-1 (Kalman gain matrix) */
-	K_0_0 = K_0_0 * temp_0_0 + K_0_1 * temp_1_0;
-	K_0_1 = K_0_0 * temp_0_1 + K_0_1 * temp_1_1;
-	K_1_0 = K_1_0 * temp_0_0 + K_1_1 * temp_1_0;
-	K_1_1 = K_1_0 * temp_0_1 + K_1_1 * temp_1_1;
-	K_2_0 = K_2_0 * temp_0_0 + K_2_1 * temp_1_0;
-	K_2_1 = K_2_0 * temp_0_1 + K_2_1 * temp_1_1;
-	K_3_0 = K_3_0 * temp_0_0 + K_3_1 * temp_1_0;
-	K_3_1 = K_3_0 * temp_0_1 + K_3_1 * temp_1_1;
+	/* Save original values to avoid overwriting during calculation */
+	float K_0_0_orig = K_0_0;
+	float K_0_1_orig = K_0_1;
+	float K_1_0_orig = K_1_0;
+	float K_1_1_orig = K_1_1;
+	float K_2_0_orig = K_2_0;
+	float K_2_1_orig = K_2_1;
+	float K_3_0_orig = K_3_0;
+	float K_3_1_orig = K_3_1;
+	
+	/* Compute K = temp * S^-1 using saved original values */
+	K_0_0 = K_0_0_orig * temp_0_0 + K_0_1_orig * temp_1_0;
+	K_0_1 = K_0_0_orig * temp_0_1 + K_0_1_orig * temp_1_1;
+	K_1_0 = K_1_0_orig * temp_0_0 + K_1_1_orig * temp_1_0;
+	K_1_1 = K_1_0_orig * temp_0_1 + K_1_1_orig * temp_1_1;
+	K_2_0 = K_2_0_orig * temp_0_0 + K_2_1_orig * temp_1_0;
+	K_2_1 = K_2_0_orig * temp_0_1 + K_2_1_orig * temp_1_1;
+	K_3_0 = K_3_0_orig * temp_0_0 + K_3_1_orig * temp_1_0;
+	K_3_1 = K_3_0_orig * temp_0_1 + K_3_1_orig * temp_1_1;
 
 	/* 
 	 * Step 9: State Correction (a posteriori estimate)
