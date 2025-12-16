@@ -142,28 +142,6 @@ void hardware_hall_sensor_init(void)
 }
 
 /**
- * @brief Initialize Communication Task Timer
- * 
- * Configures timer for periodic communication tasks.
- * This timer generates interrupts for scheduled data transmission
- * to PC or other external devices.
- */
-void hardware_communication_init(void)
-{
-	TIM_TimeBaseInitTypeDef COM_TASK_TIM_TimeBaseStructure;
-
-	TIM_DeInit(COMMUNICATION_TASK_TIM);
-	TIM_TimeBaseStructInit(&COM_TASK_TIM_TimeBaseStructure);
-	COM_TASK_TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	COM_TASK_TIM_TimeBaseStructure.TIM_Prescaler = COMMUNICATION_TASK_TIM_PRESCALER;
-	COM_TASK_TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-	COM_TASK_TIM_TimeBaseStructure.TIM_Period = COM_TASK_TIM_PERIOD;
-	TIM_TimeBaseInit(COMMUNICATION_TASK_TIM, &COM_TASK_TIM_TimeBaseStructure);
-	TIM_ITConfig(COMMUNICATION_TASK_TIM, TIM_IT_Update, ENABLE);
-	TIM_Cmd(COMMUNICATION_TASK_TIM, ENABLE);
-}
-
-/**
  * @brief Initialize DRV8301 Gate Driver GPIO Pins
  * 
  * Configures GPIO pins for DRV8301 gate driver control:
@@ -658,13 +636,6 @@ void hardware_interrupt_init(void)
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
-	/* USB OTG interrupt: Very high priority for USB communication */
-	NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-
 	/* USART2 DMA interrupt: Medium priority for telemetry data */
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_TX_DMA_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
@@ -704,7 +675,6 @@ void hard_init(void)
 {
 	hardware_clock_init();
 	hardware_hall_sensor_init();
-	/* hardware_communication_init(); */  /* Optional communication timer */
 	hardware_drv8301_init();
 	hardware_oled_screen_init();
 	hardware_led_indicator_init();
@@ -713,7 +683,6 @@ void hard_init(void)
 	hardware_adc_init();
 	hardware_exti_button_init();
 	hardware_usart2_dma_init();
-	/* communication_init(); */  /* Optional: USB communication initialization */
 
 	hardware_interrupt_init();
 }

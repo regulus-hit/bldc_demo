@@ -7,9 +7,6 @@
 #include "USART2.h"
 
 /* Private functions ---------------------------------------------------------*/
-extern USB_OTG_CORE_HANDLE USB_OTG_dev;
-extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE * pdev);
-extern __IO uint32_t data_sent;
 
 static __IO uint32_t uwTimingDelay;
 static __IO uint32_t uwSysTickCount;
@@ -102,17 +99,6 @@ void ADC_IRQHandler(void)
 void DMA1_Stream6_IRQHandler(void)
 {
 	adc_c_dma1_stream6_sub();
-}
-
-/**
- * @brief USB OTG Full Speed Interrupt Handler
- * 
- * Handles USB communication events for PC interface.
- * Delegates to USB device library interrupt service routine.
- */
-void OTG_FS_IRQHandler(void)
-{
-	USBD_OTG_ISR_Handler(&USB_OTG_dev);
 }
 
 /**

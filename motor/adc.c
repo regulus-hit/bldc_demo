@@ -157,8 +157,6 @@ void motor_run(void)
 	Ia_test = Ia;
 	Ib_test = Ib;
 	Ic_test = Ic;
-
-	int_test2 = ADC1ConvertedValue[0];
   
 	/**
 	 * Speed loop startup sequence management:
@@ -203,7 +201,6 @@ void motor_run(void)
 			}
 		}
 	}
-	float_test3 = Speed_Ref * 2.0f * PI;
 
 	/**
 	 * Sensor mode selection for BLDC motor control:

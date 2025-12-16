@@ -567,11 +567,6 @@
               <FilePath>..\Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_hash_md5.c</FilePath>
             </File>
             <File>
-              <FileName>pc_communication.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\user\pc_communication\src\pc_communication.lib</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_hash_sha1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_hash_sha1.c</FilePath>
@@ -765,11 +760,6 @@
               <FileName>oled_font.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\oled_font.c</FilePath>
-            </File>
-            <File>
-              <FileName>pc_communication_init.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\user\pc_communication_init.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_it.c</FileName>
