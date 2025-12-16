@@ -13,54 +13,54 @@
  * Auto-tune state machine states
  */
 typedef enum {
-    AUTOTUNE_IDLE = 0,              /* Not running */
-    AUTOTUNE_WAIT_STABLE,           /* Waiting for motor to reach stable state */
-    AUTOTUNE_IDENTIFY_PARAMS,       /* Waiting for parameter identification convergence */
-    AUTOTUNE_CALCULATE_GAINS,       /* Calculate new PI gains */
-    AUTOTUNE_APPLY_GAINS,           /* Apply and verify new gains */
-    AUTOTUNE_COMPLETE,              /* Auto-tune finished successfully */
-    AUTOTUNE_FAILED                 /* Auto-tune failed */
+	AUTOTUNE_IDLE = 0,              /* Not running */
+	AUTOTUNE_WAIT_STABLE,           /* Waiting for motor to reach stable state */
+	AUTOTUNE_IDENTIFY_PARAMS,       /* Waiting for parameter identification convergence */
+	AUTOTUNE_CALCULATE_GAINS,       /* Calculate new PI gains */
+	AUTOTUNE_APPLY_GAINS,           /* Apply and verify new gains */
+	AUTOTUNE_COMPLETE,              /* Auto-tune finished successfully */
+	AUTOTUNE_FAILED                 /* Auto-tune failed */
 } AUTOTUNE_STATE;
 
 /**
  * Auto-tune configuration structure
  */
 typedef struct {
-    /* Configuration parameters */
-    real32_T target_bandwidth_hz;       /* Desired current loop bandwidth (Hz) */
-    real32_T min_bandwidth_hz;          /* Minimum safe bandwidth (Hz) */
-    real32_T max_bandwidth_hz;          /* Maximum safe bandwidth (Hz) */
-    real32_T safety_margin;             /* Safety margin factor (0.5-0.9) */
-    real32_T convergence_threshold;     /* Parameter convergence threshold */
-    uint32_t stable_time_ms;            /* Time to wait for stability (ms) */
-    uint32_t max_tune_time_ms;          /* Maximum tuning time (ms) */
-    
-    /* State variables */
-    AUTOTUNE_STATE state;               /* Current state */
-    uint32_t state_entry_time;          /* Time when state was entered */
-    uint32_t tune_start_time;           /* Time when tuning started */
-    
-    /* Identified parameters */
-    real32_T Rs_identified;             /* Identified stator resistance (Ohm) */
-    real32_T Ls_identified;             /* Identified stator inductance (H) */
-    real32_T Rs_prev;                   /* Previous R for convergence check */
-    real32_T Ls_prev;                   /* Previous L for convergence check */
-    
-    /* Calculated gains */
-    real32_T Kp_calculated;             /* Calculated proportional gain */
-    real32_T Ki_calculated;             /* Calculated integral gain */
-    real32_T Kb_calculated;             /* Calculated anti-windup gain */
-    
-    /* Original gains (backup) */
-    real32_T Kp_original;               /* Original Kp before tuning */
-    real32_T Ki_original;               /* Original Ki before tuning */
-    real32_T Kb_original;               /* Original Kb before tuning */
-    
-    /* Status flags */
-    uint8_t enabled;                    /* Auto-tune enabled flag */
-    uint8_t tune_triggered;             /* Tune request flag */
-    uint8_t params_valid;               /* Identified parameters valid */
-    uint8_t gains_applied;              /* New gains applied flag */
+	/* Configuration parameters */
+	real32_T target_bandwidth_hz;       /* Desired current loop bandwidth (Hz) */
+	real32_T min_bandwidth_hz;          /* Minimum safe bandwidth (Hz) */
+	real32_T max_bandwidth_hz;          /* Maximum safe bandwidth (Hz) */
+	real32_T safety_margin;             /* Safety margin factor (0.5-0.9) */
+	real32_T convergence_threshold;     /* Parameter convergence threshold */
+	uint32_t stable_time_ms;            /* Time to wait for stability (ms) */
+	uint32_t max_tune_time_ms;          /* Maximum tuning time (ms) */
+	
+	/* State variables */
+	AUTOTUNE_STATE state;               /* Current state */
+	uint32_t state_entry_time;          /* Time when state was entered */
+	uint32_t tune_start_time;           /* Time when tuning started */
+	
+	/* Identified parameters */
+	real32_T Rs_identified;             /* Identified stator resistance (Ohm) */
+	real32_T Ls_identified;             /* Identified stator inductance (H) */
+	real32_T Rs_prev;                   /* Previous R for convergence check */
+	real32_T Ls_prev;                   /* Previous L for convergence check */
+	
+	/* Calculated gains */
+	real32_T Kp_calculated;             /* Calculated proportional gain */
+	real32_T Ki_calculated;             /* Calculated integral gain */
+	real32_T Kb_calculated;             /* Calculated anti-windup gain */
+	
+	/* Original gains (backup) */
+	real32_T Kp_original;               /* Original Kp before tuning */
+	real32_T Ki_original;               /* Original Ki before tuning */
+	real32_T Kb_original;               /* Original Kb before tuning */
+	
+	/* Status flags */
+	uint8_t enabled;                    /* Auto-tune enabled flag */
+	uint8_t tune_triggered;             /* Tune request flag */
+	uint8_t params_valid;               /* Identified parameters valid */
+	uint8_t gains_applied;              /* New gains applied flag */
 } PID_AUTOTUNE_DEF;
 
 /**
@@ -114,7 +114,7 @@ void pid_autotune_stop(void);
  * @param Kb_current Pointer to current D/Q-axis Kb gain
  */
 void pid_autotune_step(real32_T Rs_current, real32_T Ls_current,
-                       real32_T* Kp_current, real32_T* Ki_current, real32_T* Kb_current);
+					   real32_T* Kp_current, real32_T* Ki_current, real32_T* Kb_current);
 
 /**
  * @brief Get auto-tune status

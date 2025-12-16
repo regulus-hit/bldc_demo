@@ -33,13 +33,13 @@
  */
 typedef struct
 {
-    real32_T z1;        /* State 1: Speed estimate (rad/s) */
-    real32_T z2;        /* State 2: Speed derivative estimate (rad/s^2) */
-    real32_T z3;        /* State 3: Extended state (total disturbance) */
-    real32_T beta1;     /* Observer gain 1 */
-    real32_T beta2;     /* Observer gain 2 */
-    real32_T beta3;     /* Observer gain 3 */
-    real32_T b0;        /* System gain estimate (for BLDC: relates Iq to acceleration) */
+	real32_T z1;        /* State 1: Speed estimate (rad/s) */
+	real32_T z2;        /* State 2: Speed derivative estimate (rad/s^2) */
+	real32_T z3;        /* State 3: Extended state (total disturbance) */
+	real32_T beta1;     /* Observer gain 1 */
+	real32_T beta2;     /* Observer gain 2 */
+	real32_T beta3;     /* Observer gain 3 */
+	real32_T b0;        /* System gain estimate (for BLDC: relates Iq to acceleration) */
 } SPEED_ADRC_ESO;
 
 /**
@@ -52,11 +52,11 @@ typedef struct
  */
 typedef struct
 {
-    SPEED_ADRC_ESO eso;     /* Extended State Observer */
-    real32_T kp;            /* Proportional gain for error feedback */
-    real32_T kd;            /* Derivative gain for error feedback */
-    real32_T Max_Output;    /* Upper output limit (max Iq) */
-    real32_T Min_Output;    /* Lower output limit (min Iq) */
+	SPEED_ADRC_ESO eso;     /* Extended State Observer */
+	real32_T kp;            /* Proportional gain for error feedback */
+	real32_T kd;            /* Derivative gain for error feedback */
+	real32_T Max_Output;    /* Upper output limit (max Iq) */
+	real32_T Min_Output;    /* Lower output limit (min Iq) */
 } SPEED_PID_DEF;            /* Using PID name for compatibility */
 
 /* Global ADRC controller variables - reuse PID variable names since only one is active */

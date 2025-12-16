@@ -131,14 +131,9 @@ float angle_difference(float angle1, float angle2)
  * @param fused_position Output: Fused position estimate (rad)
  * @param fused_speed Output: Fused speed estimate (rad/s)
  */
-void hybrid_observer_update(
-	float ekf_position,
-	float ekf_speed,
-	float hall_position,
-	float hall_speed,
-	float *fused_position,
-	float *fused_speed
-)
+void hybrid_observer_update(float ekf_position, float ekf_speed,
+							float hall_position, float hall_speed,
+							float *fused_position, float *fused_speed)
 {
 	float position_error;
 	float speed_abs;
@@ -213,12 +208,10 @@ void hybrid_observer_update(
 	 * - Hall provides low-frequency absolute position correction
 	 * - Similar to complementary filter in IMU sensor fusion
 	 */
-	Hybrid_Observer_State.position_fused = ekf_position + 
-		HYBRID_HALL_POSITION_WEIGHT * position_error;
+	Hybrid_Observer_State.position_fused = ekf_position + HYBRID_HALL_POSITION_WEIGHT * position_error;
 	
 	/* Normalize fused position to [0, 2*PI] */
-	Hybrid_Observer_State.position_fused = 
-		normalize_angle(Hybrid_Observer_State.position_fused);
+	Hybrid_Observer_State.position_fused =  normalize_angle(Hybrid_Observer_State.position_fused);
 	
 	/*
 	 * Speed fusion using weighted average:
@@ -229,9 +222,7 @@ void hybrid_observer_update(
 	 * - Hall speed provides absolute reference but is noisy (computed from edge timing)
 	 * - Weighted average combines smooth EKF with Hall accuracy
 	 */
-	Hybrid_Observer_State.speed_fused = 
-		(1.0f - HYBRID_HALL_SPEED_WEIGHT) * ekf_speed + 
-		HYBRID_HALL_SPEED_WEIGHT * hall_speed;
+	Hybrid_Observer_State.speed_fused = (1.0f - HYBRID_HALL_SPEED_WEIGHT) * ekf_speed + HYBRID_HALL_SPEED_WEIGHT * hall_speed;
 	
 	/* Output fused estimates */
 	*fused_position = Hybrid_Observer_State.position_fused;
