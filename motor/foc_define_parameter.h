@@ -81,8 +81,8 @@
 /* Startup Current Profiling: Makes startup current ramp rate configurable
  * Allows adjustment based on motor inertia and load characteristics
  * When disabled, uses default hard-coded ramp rate (0.001 A per cycle) */
-//#define ENABLE_STARTUP_CURRENT_PROFILING
-#undef ENABLE_STARTUP_CURRENT_PROFILING
+#define ENABLE_STARTUP_CURRENT_PROFILING
+//#undef ENABLE_STARTUP_CURRENT_PROFILING
 
 /*******************************************************************************
  * PID Auto-Tuning Parameters
