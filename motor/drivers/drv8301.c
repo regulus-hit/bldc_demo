@@ -2,7 +2,7 @@
  * DRV8301 Motor Driver Interface
  * Handles SPI communication and initialization of DRV8301 gate driver
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "drv8301.h"
 
 uint16_t drv8301_reg_read[4];

@@ -3,7 +3,7 @@
  * Estimates rotor position and speed from voltage and current measurements
  * Auto-generated wrapper for Simulink-generated EKF code
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #if defined(MATLAB_MEX_FILE)
 #include "tmwtypes.h"
 #include "simstruc_types.h"

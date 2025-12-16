@@ -18,7 +18,7 @@
  * - "Modern Power Electronics and AC Drives" - Bose
  **********************************/
 #include "pid_autotune.h"
-#include "main.h"
+#include "../../user/main.h"
 #include <math.h>
 
 /* Default configuration values */

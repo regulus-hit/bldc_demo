@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F446xx,ARM_MATH_CM4,USE_USB_OTG_FS,SIMULINK_USE_ARM_MATH,__FPU_PRESENT</Define>
               <Undefine></Undefine>
-              <IncludePath>..\user;..\motor;..\Libraries;..\Libraries\STM32F4xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Include;..\Libraries\CMSIS\Device\ST\STM32F4xx\Include;..\user\pc_communication\inc</IncludePath>
+              <IncludePath>..\user;..\user\hardware;..\user\interface;..\user\app;..\motor;..\motor\control;..\motor\sensors;..\motor\drivers;..\motor\identification;..\motor\enhancement;..\Libraries;..\Libraries\STM32F4xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Include;..\Libraries\CMSIS\Device\ST\STM32F4xx\Include;..\user\pc_communication\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -664,62 +664,62 @@
             <File>
               <FileName>adc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\adc.c</FilePath>
+              <FilePath>..\motor\drivers\adc.c</FilePath>
             </File>
             <File>
               <FileName>drv8301.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\drv8301.c</FilePath>
+              <FilePath>..\motor\drivers\drv8301.c</FilePath>
             </File>
             <File>
               <FileName>foc_algorithm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\foc_algorithm.c</FilePath>
+              <FilePath>..\motor\control\foc_algorithm.c</FilePath>
             </File>
             <File>
               <FileName>hall_sensor.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\hall_sensor.c</FilePath>
+              <FilePath>..\motor\sensors\hall_sensor.c</FilePath>
             </File>
             <File>
               <FileName>hybrid_observer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\hybrid_observer.c</FilePath>
+              <FilePath>..\motor\sensors\hybrid_observer.c</FilePath>
             </File>
             <File>
               <FileName>L_identification_wrapper.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\L_identification_wrapper.c</FilePath>
+              <FilePath>..\motor\identification\L_identification_wrapper.c</FilePath>
             </File>
             <File>
               <FileName>low_task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\low_task.c</FilePath>
+              <FilePath>..\motor\control\low_task.c</FilePath>
             </File>
             <File>
               <FileName>R_flux_identification_wrapper.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\R_flux_identification_wrapper.c</FilePath>
+              <FilePath>..\motor\identification\R_flux_identification_wrapper.c</FilePath>
             </File>
             <File>
               <FileName>pid_autotune.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\pid_autotune.c</FilePath>
+              <FilePath>..\motor\enhancement\pid_autotune.c</FilePath>
             </File>
             <File>
               <FileName>speed_pid.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\speed_pid.c</FilePath>
+              <FilePath>..\motor\control\speed_pid.c</FilePath>
             </File>
             <File>
               <FileName>speed_adrc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\speed_adrc.c</FilePath>
+              <FilePath>..\motor\control\speed_adrc.c</FilePath>
             </File>
             <File>
               <FileName>stm32_ekf_wrapper.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\motor\stm32_ekf_wrapper.c</FilePath>
+              <FilePath>..\motor\identification\stm32_ekf_wrapper.c</FilePath>
             </File>
             <File>
               <FileName>foc_define_parameter.h</FileName>
@@ -734,32 +734,32 @@
             <File>
               <FileName>board_config.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\board_config.c</FilePath>
+              <FilePath>..\user\hardware\board_config.c</FilePath>
             </File>
             <File>
               <FileName>exti.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\exti.c</FilePath>
+              <FilePath>..\user\app\exti.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\main.c</FilePath>
+              <FilePath>..\user\app\main.c</FilePath>
             </File>
             <File>
               <FileName>oled.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\oled.c</FilePath>
+              <FilePath>..\user\interface\oled.c</FilePath>
             </File>
             <File>
               <FileName>oled_display.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\oled_display.c</FilePath>
+              <FilePath>..\user\interface\oled_display.c</FilePath>
             </File>
             <File>
               <FileName>oled_font.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\oled_font.c</FilePath>
+              <FilePath>..\user\interface\oled_font.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_it.c</FileName>
@@ -769,12 +769,12 @@
             <File>
               <FileName>USART2.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\USART2.c</FilePath>
+              <FilePath>..\user\interface\USART2.c</FilePath>
             </File>
             <File>
               <FileName>UpperComputer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\UpperComputer.c</FilePath>
+              <FilePath>..\user\interface\UpperComputer.c</FilePath>
             </File>
           </Files>
         </Group>

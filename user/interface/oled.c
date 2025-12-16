@@ -2,7 +2,7 @@
  * OLED Display Low-Level Driver
  * SH1106-based 128x64 monochrome OLED display control
  **********************************/
-#include "main.h"
+#include "../main.h"
 #include "oled.h"
 
 uint8_t display_buff[8][128] = {0};     /* Display buffer: 8 pages x 128 columns */

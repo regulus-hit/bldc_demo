@@ -35,21 +35,21 @@
 #include "stm32f4xx.h"
 
 #include "public.h"
-#include "foc_define_parameter.h"
+#include "../motor/foc_define_parameter.h"
 #include "arm_math.h"
-#include "board_config.h"
-#include "oled_font.h"
-#include "oled.h"
-#include "drv8301.h"
-#include "exti.h"
-#include "foc_algorithm.h"
-#include "adc.h"
-#include "hall_sensor.h"
-#include "low_task.h"
+#include "hardware/board_config.h"
+#include "interface/oled_font.h"
+#include "interface/oled.h"
+#include "../motor/drivers/drv8301.h"
+#include "app/exti.h"
+#include "../motor/control/foc_algorithm.h"
+#include "../motor/drivers/adc.h"
+#include "../motor/sensors/hall_sensor.h"
+#include "../motor/control/low_task.h"
 
-#include "oled_display.h"
+#include "interface/oled_display.h"
 
-#include "speed_pid.h"
+#include "../motor/control/speed_pid.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

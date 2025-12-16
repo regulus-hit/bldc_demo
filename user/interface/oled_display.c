@@ -1,9 +1,9 @@
 /**********************************
 
 **********************************/
-#include "main.h"
+#include "../main.h"
 #include "oled_display.h"
-#include "drv8301.h"
+#include "../../motor/drivers/drv8301.h"
 
 uint8_t usb_open_display_flag;
 uint8_t data_upload_display_flag;
