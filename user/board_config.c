@@ -618,6 +618,8 @@ void hardware_usart2_dma_init(void)
  */
 void hardware_interrupt_init(void)
 {
+	NVIC_InitTypeDef NVIC_InitStructure;
+
 	/* Configure priority grouping */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
