@@ -130,7 +130,7 @@
 #ifdef ENABLE_STARTUP_CURRENT_PROFILING
 /* Startup current ramp-up rate (A per control cycle)
  * Controls how fast Iq current increases during open-loop startup
- * At 10 kHz control frequency, 0.001 A/cycle = 10 A/s
+ * At 10 kHz control frequency (see PWM_TIM in board_config.c), 0.001 A/cycle = 10 A/s
  * 
  * Tuning guidelines:
  * - Higher values: Faster startup, risk of current spike and mechanical stress
