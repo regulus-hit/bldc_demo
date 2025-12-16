@@ -159,9 +159,10 @@
 
 ### Code Style
 
-- [ ] Use existing naming conventions (PascalCase structs, mixed globals)
+- [ ] Use linux style naming conventions
 - [ ] Add Doxygen comments for new functions
-- [ ] Follow existing indentation (tabs, not spaces)
+- [ ] Use tabs for indentation
+- [ ] If encounter with codes that use space as indentation, convert it to tabs
 - [ ] Use stdint types (uint8_t, uint16_t, etc.)
 - [ ] Uppercase hex numbers (0x00FF, not 0x00ff)
 
