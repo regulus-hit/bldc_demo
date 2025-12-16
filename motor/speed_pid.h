@@ -6,7 +6,7 @@
 # define speed_pid_COMMON_INCLUDES_
 #include "rtwtypes.h"
 #endif                               
-
+#include "public.h"
 #include "MW_target_hardware_resources.h"
 
 

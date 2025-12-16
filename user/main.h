@@ -34,6 +34,7 @@
 
 #include "stm32f4xx.h"
 
+#include "public.h"
 #include "foc_define_parameter.h"
 #include "arm_math.h"
 #include "board_config.h"
@@ -54,20 +55,6 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-#define MATH_PI 		3.1415926536F
-#define MATH_2PI 		6.2831853072F
-#define MATH_sqrt_3		1.7320508075F
-#define MATH_cos_30		0.8660254038F
-//#define MATH_cos_30	0.866025388F
-#define MATH_cos_60		0.500F
-
-#define COPILOT_BUGFIX
-#define ADC_OFFSET_CHECK
-
-/* PI macro for compatibility with existing code */
-#ifndef PI
-#define PI              MATH_PI
-#endif
 /* Exported functions ------------------------------------------------------- */
 typedef enum
 {
