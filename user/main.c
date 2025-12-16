@@ -12,6 +12,7 @@ extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE * pdev);
 extern __IO uint32_t data_sent;
 
 static __IO uint32_t uwTimingDelay;
+static __IO uint32_t uwSysTickCount;
 /**
  * @brief Main Program
  * 
@@ -28,6 +29,10 @@ static __IO uint32_t uwTimingDelay;
  */
 int main(void)
 {
+
+	uwTimingDelay = 0;
+	uwSysTickCount = 0;
+
 	/* Initialize UART for PC communication */
 	Usart2_config();
 	USART_ConfigInterrupt();
@@ -60,6 +65,7 @@ int main(void)
 		drv8301_protection();	/* Monitor for driver faults */
 		oled_display_handle();	/* Update OLED display */
 	}
+
 }
 
 /**
@@ -128,6 +134,16 @@ void TimingDelay_Decrement(void)
 	{
 		uwTimingDelay--;
 	}
+}
+
+void SysTick_update(void)
+{
+	uwSysTickCount += 1;
+}
+
+uint32_t GetSysUptime(void)
+{
+	return uwSysTickCount;
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -382,21 +382,8 @@ static void calculate_pi_gains(real32_T Rs, real32_T Ls, real32_T bandwidth_hz)
 
 /**
  * @brief Get system time in milliseconds
- * 
-
- * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
- *
-
- * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
- *
-
- * NOTE: This is a placeholder. For production, replace with HAL_GetTick() or actual timer.
- *
+ */
 static uint32_t get_system_time_ms(void)
 {
-    /* TODO: Replace with actual system timer */
-    /* For now, use a static counter incremented at control frequency */
-    static uint32_t time_counter_ms = 0;
-    time_counter_ms++;
-    return time_counter_ms / 10;  /* 10 kHz to 1 kHz conversion */
+	return GetSysUptime();
 }

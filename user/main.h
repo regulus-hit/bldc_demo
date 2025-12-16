@@ -70,6 +70,9 @@ void OTG_FS_IRQHandler(void);
 void TimingDelay_Decrement(void);
 extern void Delay(__IO uint32_t nTime);
 
+void SysTick_update(void);
+extern uint32_t GetSysUptime(void);
+
 #endif /* __MAIN_H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
