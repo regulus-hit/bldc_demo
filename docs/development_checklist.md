@@ -28,11 +28,16 @@
 
 ### Understanding the Code Structure
 
-- [ ] **Hardware Init**: `user/board_config.c`, `user/system_stm32f4xx.c`
-- [ ] **Entry Point**: `user/main.c` (ISR definitions)
-- [ ] **Gate Driver**: `motor/drv8301.c`, `driver_soft/`
-- [ ] **FOC Core**: `motor/foc_algorithm.c`, `motor/adc.c`
-- [ ] **Sensors**: `motor/hall_sensor.c`, `motor/hybrid_observer.c`
+**Organized by functional layers:**
+
+- [ ] **Hardware Init**: `user/hardware/board_config.c`, `user/hardware/system_stm32f4xx.c`
+- [ ] **Application Entry**: `user/app/main.c` (ISR definitions), `user/app/exti.c`
+- [ ] **User Interface**: `user/interface/` (OLED display, UART, UpperComputer protocol)
+- [ ] **Motor Drivers**: `motor/drivers/drv8301.c`, `motor/drivers/adc.c`, `driver_soft/`
+- [ ] **FOC Control**: `motor/control/foc_algorithm.c`, `motor/control/speed_pid.c`, `motor/control/speed_adrc.c`, `motor/control/low_task.c`
+- [ ] **Sensors**: `motor/sensors/hall_sensor.c`, `motor/sensors/hybrid_observer.c`
+- [ ] **Parameter ID**: `motor/identification/` (EKF wrapper, L/R/flux RLS wrappers)
+- [ ] **Enhancements**: `motor/enhancement/pid_autotune.c`
 - [ ] **Configuration**: `motor/foc_define_parameter.h`
 
 ---

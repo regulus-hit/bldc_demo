@@ -333,29 +333,41 @@ Comprehensive documentation available in `docs/` directory:
 ```
 bldc_demo/
 ├── motor/                          # Motor control core
-│   ├── foc_algorithm.c/h          # FOC algorithm (Clarke, Park, SVPWM)
-│   ├── adc.c/h                    # ADC sampling and motor_run() entry
-│   ├── hall_sensor.c/h            # Hall sensor handling + interpolation
-│   ├── hybrid_observer.c/h        # Hybrid Hall+EKF observer
-│   ├── stm32_ekf_wrapper.c        # Extended Kalman Filter
-│   ├── speed_pid.c/h              # Speed PI controller (traditional)
-│   ├── speed_adrc.c/h             # Speed ADRC controller (alternative)
-│   ├── drv8301.c/h                # DRV8301 gate driver interface
-│   ├── low_task.c/h               # Low-frequency tasks
-│   ├── foc_define_parameter.h     # Configuration parameters
-│   ├── R_flux_identification_wrapper.c  # Rs & flux RLS
-│   └── L_identification_wrapper.c       # Ls RLS
+│   ├── control/                   # FOC control algorithms
+│   │   ├── foc_algorithm.c/h      # FOC algorithm (Clarke, Park, SVPWM)
+│   │   ├── speed_pid.c/h          # Speed PI controller (traditional)
+│   │   ├── speed_adrc.c/h         # Speed ADRC controller (alternative)
+│   │   └── low_task.c/h           # Low-frequency tasks (motor start/stop)
+│   ├── sensors/                   # Sensor processing
+│   │   ├── hall_sensor.c/h        # Hall sensor handling + interpolation
+│   │   └── hybrid_observer.c/h    # Hybrid Hall+EKF observer
+│   ├── drivers/                   # Hardware drivers
+│   │   ├── drv8301.c/h            # DRV8301 gate driver interface
+│   │   └── adc.c/h                # ADC sampling and motor_run() entry
+│   ├── identification/            # Parameter identification
+│   │   ├── stm32_ekf_wrapper.c    # Extended Kalman Filter
+│   │   ├── R_flux_identification_wrapper.c  # Rs & flux RLS
+│   │   └── L_identification_wrapper.c       # Ls RLS
+│   ├── enhancement/               # Advanced features
+│   │   └── pid_autotune.c/h       # Automatic PI controller tuning
+│   └── foc_define_parameter.h     # Configuration parameters (root)
 ├── user/                           # User application code
-│   ├── main.c/h                   # Main entry and ISR definitions
-│   ├── board_config.c/h           # Hardware initialization (TIM, ADC, PWM)
-│   ├── exti.c/h                   # External interrupts (Hall edges)
-│   ├── oled.c/h                   # OLED display driver
-│   ├── oled_display.c/h           # OLED display logic
-│   ├── USART2.c/h                 # UART communication
-│   ├── pc_communication/          # PC tool protocol
-│   ├── pc_communication_init.c/h  # Telemetry registration
-│   ├── stm32f4xx_it.c/h           # System interrupt handlers
-│   └── system_stm32f4xx.c         # System clock configuration
+│   ├── app/                       # Application logic
+│   │   ├── main.c                 # Main entry and ISR definitions
+│   │   └── exti.c/h               # External interrupts (user buttons)
+│   ├── hardware/                  # Hardware initialization
+│   │   ├── board_config.c/h       # Hardware init (TIM, ADC, PWM)
+│   │   └── system_stm32f4xx.c     # System clock configuration
+│   ├── interface/                 # User interfaces
+│   │   ├── oled.c/h               # OLED display driver
+│   │   ├── oled_display.c/h       # OLED display logic
+│   │   ├── oled_font.c/h          # OLED font data
+│   │   ├── USART2.c/h             # UART communication
+│   │   └── UpperComputer.c/h      # PC communication protocol
+│   ├── main.h                     # Central header file (root)
+│   ├── public.h                   # Public definitions (root)
+│   ├── stm32f4xx_it.c/h           # System interrupt handlers (root)
+│   └── stm32f4xx_conf.h           # StdPeriph configuration (root)
 ├── driver_soft/                    # Software driver components
 ├── Libraries/                      # CMSIS and StdPeriph libraries
 │   ├── CMSIS/                     # ARM CMSIS headers
