@@ -3,3 +3,5 @@ settings/
 datasheet/
 Debug/
 Release/
+Keil_Project/Objects/*
+Keil_Project/Listings/*
