@@ -781,15 +781,10 @@
               <FileType>1</FileType>
               <FilePath>..\user\USART2.c</FilePath>
             </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>readme</GroupName>
-          <Files>
             <File>
-              <FileName>readme.txt</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\user\readme.txt</FilePath>
+              <FileName>UpperComputer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\UpperComputer.c</FilePath>
             </File>
           </Files>
         </Group>

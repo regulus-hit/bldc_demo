@@ -1,5 +1,5 @@
-#ifndef __LOW_TASK_H_
-#define __LOW_TASK_H_
+#ifndef __LOW_TASK_H__
+#define __LOW_TASK_H__
 
 #include <stdint.h>
 
