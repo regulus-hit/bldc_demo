@@ -6,8 +6,12 @@
 #include "UpperComputer.h"
 #include "USART2.h"
 
-static __IO uint32_t uwTimingDelay;
+/* Private functions ---------------------------------------------------------*/
+extern USB_OTG_CORE_HANDLE USB_OTG_dev;
+extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE * pdev);
+extern __IO uint32_t data_sent;
 
+static __IO uint32_t uwTimingDelay;
 /**
  * @brief Main Program
  * 

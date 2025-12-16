@@ -33,6 +33,7 @@
 #include <math.h>
 
 #include "stm32f4xx.h"
+#include "usbd_cdc_core_loopback.h"
 
 #include "public.h"
 #include "foc_define_parameter.h"
