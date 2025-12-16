@@ -157,7 +157,7 @@
  * Hybrid Hall+EKF Observer Parameters
  * Used when HYBRID_HALL_EKF_SELECT is enabled
  ******************************************************************************/
-#ifdef HYBRID_HALL_EKF_SELECT
+
 /* Hall sensor measurement noise covariance (rad²)
  * Represents uncertainty in Hall sensor position measurement
  * Hall sensors have ~60° resolution, so variance reflects this */
@@ -189,8 +189,6 @@
  * This handles EKF divergence scenarios
  * Typical: PI/3 (60 degrees) - one Hall sector */
 #define HYBRID_HALL_MAX_POSITION_ERROR  1.047f  /* PI/3 radians */
-
-#endif  /* HYBRID_HALL_EKF_SELECT */
 
 /*******************************************************************************
  * Hall Sensor Interpolation Parameters (HALL_FOC_SELECT mode only)
