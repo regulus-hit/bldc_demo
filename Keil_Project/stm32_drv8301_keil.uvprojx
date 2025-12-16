@@ -777,11 +777,6 @@
               <FilePath>..\user\stm32f4xx_it.c</FilePath>
             </File>
             <File>
-              <FileName>UpperComputer.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\user\UpperComputer.lib</FilePath>
-            </File>
-            <File>
               <FileName>USART2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\USART2.c</FilePath>
