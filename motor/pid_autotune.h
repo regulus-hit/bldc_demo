@@ -6,6 +6,7 @@
 #ifndef __PID_AUTOTUNE_H__
 #define __PID_AUTOTUNE_H__
 
+#include <stdint.h>
 #include "rtwtypes.h"
 
 /**
