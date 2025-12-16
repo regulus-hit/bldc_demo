@@ -161,7 +161,7 @@
 
 - [ ] Use existing naming conventions (PascalCase structs, mixed globals)
 - [ ] Add Doxygen comments for new functions
-- [ ] Follow existing indentation (spaces, not tabs)
+- [ ] Follow existing indentation (tabs, not spaces)
 - [ ] Use stdint types (uint8_t, uint16_t, etc.)
 - [ ] Uppercase hex numbers (0x00FF, not 0x00ff)
 
