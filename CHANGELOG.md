@@ -12,6 +12,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2025-12-16
+
+### Added
+- 🤖 **Startup Current Profiling** (PR #11)
+  - Configurable startup current ramp rates for motor open-loop acceleration
+  - Separate ramp-up and ramp-down rate parameters
+  - Allows adjustment based on motor inertia and load characteristics
+  - Configurable via `ENABLE_STARTUP_CURRENT_PROFILING` macro (disabled by default)
+  - Configuration parameters:
+    - `STARTUP_CURRENT_RAMP_UP_RATE`: Controls acceleration smoothness (default 0.001 A/cycle = 10 A/s)
+    - `STARTUP_CURRENT_RAMP_DOWN_RATE`: Controls transition to closed-loop (default 0.001 A/cycle = 10 A/s)
+  - Tuning range: 0.0005-0.005 A/cycle ramp-up (5-50 A/s at 10 kHz)
+  - Comprehensive inline documentation with tuning guidelines
+  - Modified files: `motor/foc_define_parameter.h`, `motor/adc.c`
+  - Updated documentation: `docs/project_stat.md`, `CHANGELOG.md`
+
+### Changed
+- 🤖 Startup current ramp code in `motor/adc.c` now uses configurable rates when feature is enabled
+- 🤖 Default behavior unchanged (0.001 A/cycle) for backward compatibility
+- 🤖 Documentation updated with 8th enhancement feature implemented
+
+### Benefits
+- Adjustable startup behavior for different motor/load combinations
+- High inertia motors: Use lower ramp rate for smoother start
+- Low inertia motors: Use higher ramp rate for faster start
+- Prevents current spikes and mechanical stress during startup
+- Zero additional RAM usage (compile-time constants)
+
 ## [1.5.0] - 2025-12-16
 
 **Note**: This release consolidates all previous work (PRs #1-10) into a stable, production-ready version. The project builds successfully in Keil µVision after addressing all identified issues.

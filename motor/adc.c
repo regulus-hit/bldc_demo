@@ -173,7 +173,11 @@ void motor_run(void)
 		/* Open-loop startup: slowly ramp torque current to accelerate motor */
 		if ((Iq_ref < MOTOR_STARTUP_CURRENT * motor_direction))
 		{
-			Iq_ref += 0.001f;	/* Gradual ramp prevents inrush current */
+#ifdef ENABLE_STARTUP_CURRENT_PROFILING
+			Iq_ref += STARTUP_CURRENT_RAMP_UP_RATE;	/* Configurable ramp rate */
+#else
+			Iq_ref += 0.001f;	/* Default: Gradual ramp prevents inrush current */
+#endif
 		}
 		else
 		{
@@ -187,7 +191,11 @@ void motor_run(void)
 			/* Transition stage: reduce startup current before speed loop takes over */
 			if (Iq_ref > (MOTOR_STARTUP_CURRENT * motor_direction / 2.0f))
 			{
-				Iq_ref -= 0.001f;
+#ifdef ENABLE_STARTUP_CURRENT_PROFILING
+				Iq_ref -= STARTUP_CURRENT_RAMP_DOWN_RATE;	/* Configurable ramp rate */
+#else
+				Iq_ref -= 0.001f;	/* Default ramp rate */
+#endif
 			}
 			else
 			{
