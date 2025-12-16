@@ -116,10 +116,11 @@ void USART_ConfigInterrupt(void)
 	/* Enable RXNE interrupt on USART2 */
 	USART_ITConfig(UC_USARTx, UC_USART_IT_RXNE, ENABLE);
 
-	/* NVIC configuration for USART2 IRQ */
 	NVIC_InitTypeDef NVIC_InitStructure;
+
+	/* NVIC configuration for USART2 IRQ */
 	NVIC_InitStructure.NVIC_IRQChannel = UC_USARTx_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
