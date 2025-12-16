@@ -12,6 +12,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2025-12-16
+
+### Changed
+- 🤖 **Code Structure Refactoring** (PR #12)
+  - Reorganized `motor/` folder into functional subdirectories:
+    - `motor/control/` - FOC algorithms and speed controllers
+    - `motor/sensors/` - Hall sensor and hybrid observer
+    - `motor/drivers/` - DRV8301 and ADC drivers
+    - `motor/identification/` - Parameter identification wrappers
+    - `motor/enhancement/` - PID auto-tune and advanced features
+  - Reorganized `user/` folder into functional subdirectories:
+    - `user/hardware/` - Board config and system init
+    - `user/interface/` - OLED, UART, and PC communication
+    - `user/app/` - Main application and interrupt handlers
+  - Updated all `#include` statements to reflect new paths
+  - Updated Keil project file with new directory structure
+  - Updated documentation with new file locations
+  - **Zero functional changes** - only organizational improvements
+
+### Benefits
+- Improved code clarity with functional separation
+- Easier navigation for developers
+- Better scalability for future features
+- Reduced cognitive load with focused subdirectories
+- Maintained backward compatibility
+
 ## [1.5.1] - 2025-12-16
 
 ### Added

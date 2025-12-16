@@ -3,16 +3,16 @@
  * Field Oriented Control for BLDC/PMSM motors
  * Includes coordinate transforms, PI controllers, and SVPWM
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "foc_algorithm.h"
-#include "foc_define_parameter.h"
+#include "../foc_define_parameter.h"
 
 #ifdef HYBRID_HALL_EKF_SELECT
-#include "hybrid_observer.h"
+#include "../sensors/hybrid_observer.h"
 #endif
 
 #ifdef ENABLE_PID_AUTOTUNE
-#include "pid_autotune.h"
+#include "../enhancement/pid_autotune.h"
 #endif
 
 /* Include appropriate speed controller based on configuration */

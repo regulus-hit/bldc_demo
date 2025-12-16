@@ -2,12 +2,12 @@
  * ADC and Motor Control Main Loop
  * Handles ADC sampling, current/voltage measurement, and FOC execution
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "adc.h"
-#include "UpperComputer.h"
+#include "../../user/interface/UpperComputer.h"
 
 #ifdef HYBRID_HALL_EKF_SELECT
-#include "hybrid_observer.h"
+#include "../sensors/hybrid_observer.h"
 #endif
 
 #define SEND_BUFFER_SIZE 20  /* 16 bytes data + 4 bytes tail */

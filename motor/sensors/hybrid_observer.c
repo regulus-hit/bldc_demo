@@ -6,9 +6,9 @@
  * - SimpleFOC: Hybrid angle sensor implementation
  * - STMicroelectronics: Sensorless/sensored switching strategies
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "hybrid_observer.h"
-#include "foc_define_parameter.h"
+#include "../foc_define_parameter.h"
 #include <math.h>
 
 /* Hybrid observer state */

@@ -17,10 +17,10 @@
 #include "stm32f4xx_usart.h"
 #include "misc.h"
 
-#include "public.h"
-#include "main.h"
-#include "exti.h"
-#include "low_task.h"
+#include "../public.h"
+#include "../main.h"
+#include "../app/exti.h"
+#include "../../motor/control/low_task.h"
 #include "UpperComputer.h"
 
 

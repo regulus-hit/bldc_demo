@@ -2,7 +2,7 @@
  * USART2 Configuration for Motor Telemetry
  * High-speed serial communication for real-time data logging
  **********************************/
-#include "main.h"
+#include "../main.h"
 #include "USART2.h"
 
 /**

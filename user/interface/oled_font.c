@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../main.h"
 #include "oled_font.h"
 
 unsigned char Logo[] = 

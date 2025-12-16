@@ -2,9 +2,9 @@
  * Low Frequency Tasks
  * Handles motor start/stop, user input, and speed control
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "low_task.h"
-#include "adc.h"
+#include "../drivers/adc.h"
 
 uint16_t hz_100_cnt = 0;
 uint8_t motor_start_stop = 0;

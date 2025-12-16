@@ -2,7 +2,7 @@
  * External Interrupt Handlers
  * User button input processing
  **********************************/
-#include "main.h"
+#include "../main.h"
 #include "exti.h"
 
 uint8_t key1_flag;

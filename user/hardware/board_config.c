@@ -2,7 +2,7 @@
  * Hardware Configuration and Initialization
  * STM32F4 board-specific peripheral setup for BLDC motor control
  **********************************/
-#include "main.h"
+#include "../main.h"
 #include "board_config.h"
 
 /**

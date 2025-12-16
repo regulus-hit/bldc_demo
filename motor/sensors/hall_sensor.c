@@ -7,7 +7,7 @@
  * - SimpleFOC: Hall sensor edge detection and angle estimation
  * - Microchip AN4413: BLDC Motor Control with Hall Sensors
  **********************************/
-#include "main.h"
+#include "../../user/main.h"
 #include "hall_sensor.h"
 
 uint8_t hall_read_temp;

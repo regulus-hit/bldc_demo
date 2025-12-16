@@ -2,9 +2,9 @@
  * Main Program Entry Point
  * BLDC Motor FOC Control System
  **********************************/
-#include "main.h"
-#include "UpperComputer.h"
-#include "USART2.h"
+#include "../main.h"
+#include "../interface/UpperComputer.h"
+#include "../interface/USART2.h"
 
 /* Private functions ---------------------------------------------------------*/
 
