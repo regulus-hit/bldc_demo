@@ -33,7 +33,6 @@
 #include <math.h>
 
 #include "stm32f4xx.h"
-#include "usbd_cdc_core_loopback.h"
 
 #include "public.h"
 #include "foc_define_parameter.h"
@@ -46,13 +45,11 @@
 #include "foc_algorithm.h"
 #include "adc.h"
 #include "hall_sensor.h"
-#include "communication.h"
 #include "low_task.h"
 
 #include "oled_display.h"
 
 #include "speed_pid.h"
-#include "pc_communication_init.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
