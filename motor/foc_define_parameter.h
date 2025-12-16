@@ -78,6 +78,12 @@
 //#define ENABLE_PID_AUTOTUNE
 #undef ENABLE_PID_AUTOTUNE
 
+/* Startup Current Profiling: Makes startup current ramp rate configurable
+ * Allows adjustment based on motor inertia and load characteristics
+ * When disabled, uses default hard-coded ramp rate (0.001 A per cycle) */
+//#define ENABLE_STARTUP_CURRENT_PROFILING
+#undef ENABLE_STARTUP_CURRENT_PROFILING
+
 /*******************************************************************************
  * PID Auto-Tuning Parameters
  ******************************************************************************/
@@ -117,6 +123,43 @@
  * Typical: 5000-15000 ms */
 #define PID_AUTOTUNE_MAX_TUNE_TIME_MS      10000
 #endif  /* ENABLE_PID_AUTOTUNE */
+
+/*******************************************************************************
+ * Startup Current Profiling Parameters
+ ******************************************************************************/
+#ifdef ENABLE_STARTUP_CURRENT_PROFILING
+/* Startup current ramp-up rate (A per control cycle)
+ * Controls how fast Iq current increases during open-loop startup
+ * At 10 kHz control frequency (see PWM_TIM in board_config.c), 0.001 A/cycle = 10 A/s
+ * 
+ * Tuning guidelines:
+ * - Higher values: Faster startup, risk of current spike and mechanical stress
+ * - Lower values: Smoother startup, longer acceleration time
+ * - Typical range: 0.0005 to 0.005 A/cycle (5-50 A/s)
+ * - Default: 0.001 A/cycle (10 A/s) - balanced for most applications
+ * 
+ * Adjust based on:
+ * - Motor inertia (high inertia → lower rate)
+ * - Load torque (high load → may need higher current, but keep rate moderate)
+ * - Mechanical constraints (delicate mechanics → lower rate)
+ * - Power supply capability (limited supply → lower rate) */
+#define STARTUP_CURRENT_RAMP_UP_RATE    0.001f
+
+/* Startup current ramp-down rate (A per control cycle)
+ * Controls how fast Iq current decreases during transition to closed-loop
+ * This stage reduces startup current before speed PID takes over
+ * 
+ * Tuning guidelines:
+ * - Should be equal to or slightly faster than ramp-up rate
+ * - Faster ramp-down enables quicker transition to speed control
+ * - Too fast may cause speed dip during handoff
+ * - Typical range: 0.001 to 0.01 A/cycle (10-100 A/s)
+ * - Default: 0.001 A/cycle (same as ramp-up for symmetric behavior)
+ * 
+ * Note: Transition happens when speed loop engages, typically at 50 rad/s
+ * Total transition time ≈ (MOTOR_STARTUP_CURRENT / 2) / RAMP_DOWN_RATE cycles */
+#define STARTUP_CURRENT_RAMP_DOWN_RATE  0.001f
+#endif  /* ENABLE_STARTUP_CURRENT_PROFILING */
 
 /*******************************************************************************
  * Dead-Time Compensation Parameters
