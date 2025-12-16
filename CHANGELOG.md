@@ -12,10 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-12-16
+
+**Note**: This release consolidates all previous work (PRs #1-10) into a stable, production-ready version. The project builds successfully in Keil µVision after addressing all identified issues.
+
 ## [1.5.0] - 2025-12-15
 
 ### Added
-- 🤖 **Linear ADRC Speed Controller** (PR #TBD)
+- 🤖 **Linear ADRC Speed Controller** (PR #10)
   - Alternative speed controller using Active Disturbance Rejection Control
   - Superior disturbance rejection compared to traditional PID
   - Extended State Observer (ESO) estimates speed, acceleration, and total disturbance
@@ -60,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.0] - 2025-12-15
 
 ### Added
-- 🤖 **PID Auto-Tuning for Current Loop Controllers** (PR #TBD)
+- 🤖 **PID Auto-Tuning for Current Loop Controllers** (PR #9)
   - Model-based automatic optimization of Id and Iq PI controller gains
   - Uses identified motor parameters (R, L) from existing RLS algorithms
   - Algorithm: Kp = L × ωc, Ki = R × ωc (TI InstaSPIN approach)
@@ -84,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2025-12-15 20:49:20 +0800
 
 ### Added
-- 🤖 **Hall Sensor Position Interpolation** (PR #7, commits 0514b92, 4272d48, 03c49cd)
+- 🤖 **Hall Sensor Position Interpolation** (PR #8, commits 0514b92, 4272d48, 03c49cd)
   - Velocity-based linear interpolation between Hall edges for HALL_FOC_SELECT mode
   - Automatic misalignment correction for Hall sensor installation errors
   - Configurable via `ENABLE_HALL_INTERPOLATION` macro
