@@ -29,7 +29,6 @@ void motor_start(void)
 
 	hall_angle_add = 0.0005f;
 	hall_speed = 0.0f;
-	hall_mech_speed = 0.0f;					/* Initialize mechanical speed */
 	TIM_CtrlPWMOutputs(PWM_TIM, ENABLE);
 
 	motor_run_display_flag = 1;

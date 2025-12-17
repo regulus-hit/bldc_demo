@@ -9,27 +9,12 @@
  **********************************/
 #include "main.h"
 #include "hall_sensor.h"
-#include "foc_define_parameter.h"
 
 uint8_t hall_read_temp;
 
 float hall_angle;
 float hall_angle_add;
 float hall_speed;
-
-/* Mechanical speed averaging over pole pairs
- * In motors with multiple pole pairs, slight manufacturing variations between
- * poles can cause speed oscillations at each Hall edge. Averaging over one
- * complete mechanical rotation (all pole pairs) provides more stable speed. */
-float hall_mech_speed = 0.0f;
-
-/* Circular buffer for Hall edge intervals (one per pole pair)
- * Each Hall edge occurs every 60 electrical degrees.
- * 6 edges = 1 electrical cycle = 1 pole pair
- * MOTOR_POLE_PAIRS * 6 edges = 1 mechanical rotation */
-static uint32_t hall_edge_interval_buffer[MOTOR_POLE_PAIRS * 6];
-static uint8_t hall_edge_buffer_index = 0;
-static uint8_t hall_edge_buffer_filled = 0;
 
 #ifdef ENABLE_HALL_INTERPOLATION
 /* Hall sensor interpolation state */
@@ -186,44 +171,6 @@ void hall_sensor_c_tim2_sub(void)
 		/* Calculate speed and angle increment from capture period */
 		hall_angle_add = (float)HALL_ANGLE_FACTOR / temp;
 		hall_speed = (float)HALL_SPEED_FACTOR / temp;
-		
-		/* Update mechanical speed calculation using circular buffer averaging
-		 * Store current edge interval in buffer for averaging over pole pairs */
-		hall_edge_interval_buffer[hall_edge_buffer_index] = current_timestamp;
-		hall_edge_buffer_index++;
-		
-		/* Wrap buffer index (circular buffer) */
-		if (hall_edge_buffer_index >= (MOTOR_POLE_PAIRS * 6))
-		{
-			hall_edge_buffer_index = 0;
-			hall_edge_buffer_filled = 1;  /* Buffer now contains full rotation data */
-		}
-		
-		/* Calculate mechanical speed by averaging intervals over pole pairs
-		 * Only perform averaging once buffer is filled with one full rotation */
-		if (hall_edge_buffer_filled)
-		{
-			uint32_t sum_intervals = 0;
-			uint8_t i;
-			
-			/* Sum all intervals in buffer */
-			for (i = 0; i < (MOTOR_POLE_PAIRS * 6); i++)
-			{
-				sum_intervals += hall_edge_interval_buffer[i];
-			}
-			
-			/* Calculate average interval per edge
-			 * Mechanical speed = HALL_SPEED_FACTOR / average_interval
-			 * Average interval = sum / (MOTOR_POLE_PAIRS * 6) */
-			float average_interval = (float)sum_intervals / (float)(MOTOR_POLE_PAIRS * 6);
-			hall_mech_speed = (float)HALL_SPEED_FACTOR / average_interval;
-		}
-		else
-		{
-			/* Buffer not yet filled - use instantaneous electrical speed
-			 * Convert electrical speed to mechanical: divide by pole pairs */
-			hall_mech_speed = hall_speed / (float)MOTOR_POLE_PAIRS;
-		}
 		
 #ifdef ENABLE_HALL_INTERPOLATION
 		/* Save edge timing information for interpolation */
