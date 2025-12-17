@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - EKF infers speed from back-EMF magnitude: `E = flux × omega`
     - If `flux_used` is larger than `flux_true`, EKF estimates lower speed
     - Measured error factor (1.136) is consistent with theoretical 2/sqrt(3) = 1.1547 (differs by 1.6%, within motor parameter measurement uncertainty)
-  - **Solution**: Apply correction factor sqrt(3)/2 ≈ 0.866 to flux parameter in EKF
-    - `flux = FLUX_PARAMETER × MATH_cos_30` in Start_wrapper (where MATH_cos_30 = sqrt(3)/2)
+  - **Solution**: Apply empirically-determined correction factor to flux parameter in EKF
+    - Initial: `flux = FLUX_PARAMETER × 0.866` (theoretical sqrt(3)/2)
+    - **Refined**: `flux = FLUX_PARAMETER × 0.8803` (empirical 1/1.136) - more accurate for this motor
+    - Empirical value accounts for motor-specific parameter variations and measurement conditions
     - **Critical**: Do NOT apply in Update_wrapper (prevents feedback loop with R_flux_identification)
     - Surgical fix: only affects EKF speed estimation, preserves other code
   - **Feedback Loop Issue Found and Fixed**:
