@@ -52,6 +52,10 @@ extern void stm32_ekf_Start_wrapper(real_T *xD);
 extern void stm32_ekf_Outputs_wrapper(const real32_T *u, real32_T *y, const real_T *xD);
 extern void stm32_ekf_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD);
 extern void stm32_ekf_Terminate_wrapper(real_T *xD);
+#ifdef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+extern void ekf_flux_calibration_update(float hall_speed_rad_s, float ekf_speed_rad_s);
+extern void ekf_flux_calibration_reset(void);
+#endif
 #ifdef __cplusplus
 }
 #endif

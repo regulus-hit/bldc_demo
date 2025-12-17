@@ -295,6 +295,13 @@ void motor_run(void)
 	/* Position and speed from Extended Kalman Filter */
 	FOC_Input.theta = FOC_Output.EKF[3] + myref;
 	FOC_Input.speed_fdk = FOC_Output.EKF[2];
+	
+#ifdef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+	/* Auto-calibrate EKF flux correction using Hall sensor feedback
+	 * Compares EKF speed estimate with Hall sensor measurement to
+	 * automatically determine optimal flux correction factor */
+	ekf_flux_calibration_update(hall_speed * 2.0f * PI, FOC_Output.EKF[2]);
+#endif
 
 #endif
 
