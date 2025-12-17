@@ -52,7 +52,7 @@ void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_t
 	/* Calculate error with unit conversion: Hz -> rad/s (multiply by 2*PI) */
 	error = MATH_2PI * ref_temp - fdb_temp;
 
-#ifdef COPILOT_BUGFIX
+#ifdef COPILOT_BUGFIX_PI
 	/* PI control law: P + I (standard form) */
 	temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
 #else

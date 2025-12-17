@@ -8,7 +8,12 @@
 //#define MATH_cos_30	0.866025388F
 #define MATH_cos_60		0.500F
 
-#define COPILOT_BUGFIX
+//#define COPILOT_BUGFIX_PI
+#undef COPILOT_BUGFIX_PI
+
+#define COPILOT_BUGFIX_VECTOR_SCALE
+//#undef COPILOT_BUGFIX_VECTOR_SCALE
+
 #define ADC_OFFSET_CHECK
 
 /* PI macro for compatibility with existing code */
