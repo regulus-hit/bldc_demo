@@ -1,9 +1,9 @@
 # FOC Control Loop Analysis Report
 ## BLDC Motor Sensorless Control System
 
-**Last Updated:** 2025-12-16 07:30:00 UTC  
+**Last Updated:** 2025-12-17 04:30:00 UTC  
 **Scope:** Comprehensive mathematical verification and optimization analysis  
-**Status:** ✅ STABLE - All PRs (#1-10) integrated, 5 critical bugs fixed, hybrid observer implemented, PID auto-tuning added, Linear ADRC implemented, all algorithms verified correct, builds successfully in Keil µVision
+**Status:** ✅ STABLE - All PRs (#1-16) integrated, 6 critical bugs fixed, hybrid observer implemented, PID auto-tuning added, Linear ADRC implemented, all algorithms verified correct, builds successfully in Keil µVision
 
 **For agents:** 
 1. Refer to other successful BLDC FOC projects(ST Motor Control SDK, TI MotorWare, SimpleFOC etc.);
@@ -18,9 +18,10 @@
 This document provides a comprehensive analysis of the BLDC motor Field-Oriented Control (FOC) system implementation. The analysis compared the implementation against industry-standard references including STMicroelectronics Motor Control SDK, Texas Instruments MotorWare, and the SimpleFOC library.
 
 **Key Findings:**
-- **5 critical bugs discovered and fixed**
+- **6 critical bugs discovered and fixed**
   - 2 bugs in Extended Kalman Filter (EKF) state observer
   - 3 bugs in FOC control loop
+  - 1 bug in user input handling (direction change)
 - **All algorithms verified mathematically correct** against textbook formulations
 - **System now matches commercial motor control implementations**
 
@@ -354,6 +355,68 @@ For a 12-bit ADC (0-4095 counts) with mid-scale at 2048:
 - Avoids false overcurrent protection trips
 - Improves system reliability
 - Automatic recovery from bad calibration attempts
+
+---
+
+### Bug #5: Direction Change Uncontrolled Spinning ⚠️ CRITICAL
+
+**File:** `motor/low_task.c`  
+**Lines:** 104-113  
+**Commit:** f2d5371  
+**Issue:** Key1 long press direction change caused motor to spin extremely fast without control
+
+#### Problem
+When user long-pressed key1 to reverse motor direction, the code executed:
+
+```c
+// WRONG: Immediately restarts motor after direction change
+motor_stop();
+motor_direction = -motor_direction;
+motor_start();  // ✗ Causes uncontrolled spinning
+```
+
+This caused several issues:
+1. Motor restarts immediately with new direction
+2. `motor_start()` resets `Speed_Ref` to only ±25 Hz (startup speed)
+3. Control system may retain state from previous high-speed operation
+4. Sudden speed/direction change causes instability
+5. Motor spins "extremely fast without control"
+
+#### Solution
+Remove `motor_start()` call and properly update motor state:
+
+```c
+// CORRECT: Stop motor and wait for user to restart
+motor_stop();
+motor_direction = -motor_direction;
+motor_start_stop = 0;  // ✓ Keep motor stopped - user must restart
+```
+
+#### Behavior Change
+**Before (buggy):**
+1. Motor running at 100 Hz forward
+2. Long press key1
+3. Motor immediately restarts at 25 Hz backward (unstable)
+
+**After (correct):**
+1. Motor running at 100 Hz forward
+2. Long press key1
+3. Motor stops completely, direction flipped
+4. User presses key1 short press to restart at 25 Hz in new direction
+5. User can then adjust speed with key2/key3
+
+#### Rationale
+Original expected behavior: "when change direction with original code, it won't spin"
+- Safer: Gives user control of when to restart
+- Predictable: Motor always starts at safe low speed
+- Consistent: Matches initial startup behavior
+- No transients: Avoids control system state conflicts
+
+#### Impact
+- Eliminates uncontrolled spinning during direction changes
+- Improves user safety
+- Provides predictable motor behavior
+- Allows user to prepare for direction reversal
 
 ---
 
