@@ -32,7 +32,7 @@
 
 #define RS_PARAMETER     0.1f           //电阻
 #define LS_PARAMETER     0.0005f          //电感
-#define FLUX_PARAMETER   0.005000f        //磁链
+#define FLUX_PARAMETER   0.003800f        //磁链
 
 /*******************************************************************************
  * Advanced FOC Enhancement Features
