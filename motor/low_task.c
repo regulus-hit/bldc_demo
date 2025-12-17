@@ -51,7 +51,7 @@ void motor_stop(void)
  * @brief Low Frequency Control Task
  * 
  * Handles user input from three keys for motor control:
- * - Key1: Short press toggles motor start/stop; long press (>100ms) reverses direction
+ * - Key1: Short press toggles motor start/stop; long press (>1s) reverses direction and stops motor
  * - Key2: Decreases speed reference by 5 Hz (minimum 25 Hz)
  * - Key3: Increases speed reference by 5 Hz (maximum 200 Hz)
  * 
@@ -103,10 +103,10 @@ void lowfreq_control_task(void)
 		}
 		else if (key1_cnt > 100)
 		{
-			/* Long press: Reverse motor direction */
+			/* Long press: Reverse motor direction and stop (user must restart with short press) */
 			motor_stop();
 			motor_direction = -motor_direction;
-			motor_start();
+			motor_start_stop = 0;  /* Set motor to stopped state - prevents immediate restart */
 			key1_cnt = 0;
 			key1_flag = 0;
 			key1_press_flag = 0;
