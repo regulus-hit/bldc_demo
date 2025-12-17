@@ -25,9 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - If `flux_used` is larger than `flux_true`, EKF estimates lower speed
     - Measured error factor (1.136) is consistent with theoretical 2/sqrt(3) = 1.1547 (differs by 1.6%, within motor parameter measurement uncertainty)
   - **Solution**: Apply correction factor sqrt(3)/2 ≈ 0.866 to flux parameter in EKF
-    - `flux = FLUX_PARAMETER × MATH_cos_30` (where MATH_cos_30 = sqrt(3)/2)
-    - Applied in both `stm32_ekf_Start_wrapper()` and `stm32_ekf_Update_wrapper()`
+    - `flux = FLUX_PARAMETER × MATH_cos_30` in Start_wrapper (where MATH_cos_30 = sqrt(3)/2)
+    - **Critical**: Do NOT apply in Update_wrapper (prevents feedback loop with R_flux_identification)
     - Surgical fix: only affects EKF speed estimation, preserves other code
+  - **Feedback Loop Issue Found and Fixed**:
+    - Initial implementation applied correction in both Start_wrapper AND Update_wrapper
+    - This created positive feedback loop with R_flux_identification → flux went to 0
+    - **Fix**: Only apply correction in Start_wrapper, use identified flux as-is in Update_wrapper
+    - This allows R_flux_identification to converge to correct flux scale naturally
   - Current feedback and position estimation already correct (no changes needed)
   - Modified files: `motor/stm32_ekf_wrapper.c`
   - Comprehensive documentation added to `docs/project_stat.md`
@@ -36,8 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ EKF speed now matches Hall sensor measurements (error < 1%)
 - ✅ No change to current control performance
 - ✅ Position estimation remains accurate
-- ✅ Parameter identification continues to work correctly
-- ✅ Backward compatible (correction only in EKF wrapper)
+- ✅ Parameter identification converges correctly (no feedback loop)
+- ✅ System reaches stable operation
+- ✅ Backward compatible (correction only in EKF wrapper Start function)
 
 ### Technical Details
 - Common scaling issue in motor control from different flux linkage conventions

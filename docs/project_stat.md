@@ -223,12 +223,31 @@ flux = u[6] * MATH_cos_30;  // Apply same correction to identified flux
 3. **Correct Physics:** Aligns flux definition with Clarke transform convention used
 4. **Verified:** Measured factor 1.136 is close to theoretical 2/sqrt(3) = 1.1547 (differs by 1.6%, consistent with motor parameter measurement uncertainty)
 
+#### Critical Update: Feedback Loop Issue (Fixed)
+
+**Initial Implementation Problem:**
+The first fix applied the correction in both `Start_wrapper` AND `Update_wrapper`. This created a positive feedback loop:
+
+1. EKF with corrected flux estimates correct speed
+2. R_flux_identification sees correct speed, estimates correct flux
+3. Update_wrapper applied correction (×0.866) to identified flux
+4. EKF flux became too small, speed estimate increased
+5. R_flux_identification compensated by estimating higher flux
+6. Loop diverged → flux went to 0, EKF speed became 0
+
+**Corrected Implementation:**
+- **Start_wrapper:** Apply correction to initial `FLUX_PARAMETER` only
+- **Update_wrapper:** Use identified flux from R_flux_identification as-is (NO correction)
+
+This breaks the feedback loop. R_flux_identification converges to estimate flux in the CORRECT scale (matching the corrected Start_wrapper value), which can then be used directly.
+
 #### Impact
 - ✅ EKF speed estimation now matches Hall sensor measurements
 - ✅ No change to current control (still uses original FLUX_PARAMETER)
 - ✅ Position estimation remains accurate
-- ✅ Parameter identification continues to work
-- ✅ Backward compatible (correction only in EKF wrapper)
+- ✅ Parameter identification continues to work correctly (no feedback loop)
+- ✅ System converges to stable operation
+- ✅ Backward compatible (correction only in EKF wrapper Start function)
 
 ---
 
