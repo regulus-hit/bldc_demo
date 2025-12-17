@@ -72,6 +72,14 @@
 #define ENABLE_STARTUP_CURRENT_PROFILING
 //#undef ENABLE_STARTUP_CURRENT_PROFILING
 
+/* EKF Flux Auto-Calibration: Automatically calibrates flux correction factor
+ * Compares EKF speed with Hall sensor feedback to determine optimal flux scaling
+ * Eliminates need for manual motor-specific correction factors
+ * Requires Hall sensors available during calibration phase
+ * When disabled, uses fixed empirical correction factor (0.8803) */
+#define ENABLE_EKF_FLUX_AUTO_CALIBRATION
+//#undef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+
 /*******************************************************************************
  * PID Auto-Tuning Parameters
  ******************************************************************************/

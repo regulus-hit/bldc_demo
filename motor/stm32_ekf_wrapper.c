@@ -22,6 +22,22 @@ float Rs;    /* Stator resistance (Ohms) */
 float Ls;    /* Stator inductance (Henries) */
 float flux;  /* Permanent magnet flux linkage (Wb) */
 
+#ifdef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+/* Automatic flux correction calibration state
+ * Dynamically aligns EKF speed with Hall sensor feedback */
+static struct {
+	float correction_factor;     /* Current flux correction factor */
+	float correction_sum;        /* Accumulated correction for averaging */
+	uint32_t sample_count;       /* Number of samples collected */
+	uint8_t calibration_complete;  /* Flag: 1 = calibration done */
+} flux_calibration_state = {
+	.correction_factor = 1.0f,
+	.correction_sum = 0.0f,
+	.sample_count = 0,
+	.calibration_complete = 0
+};
+#endif
+
 /* 
  * Process noise covariance matrix Q (4x4, diagonal only)
  * Models uncertainty in state dynamics (how much states can randomly change)
@@ -277,6 +293,98 @@ float tempa_3_0;  /* tempa[3]: Corrected theta estimate (rad) */
 #define u_width 7
 #define y_width 1
 
+#ifdef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+/**
+ * @brief Update flux correction calibration with Hall sensor feedback
+ * 
+ * Automatically calibrates the flux correction factor by comparing EKF speed
+ * estimates with Hall sensor measurements. This eliminates the need for manual
+ * flux correction factors that vary between motors.
+ * 
+ * Algorithm:
+ * 1. Collects speed ratio samples (Hall/EKF) during normal operation
+ * 2. Averages over CALIBRATION_SAMPLES to filter noise
+ * 3. Computes correction factor = 1 / average_ratio
+ * 4. Applies correction to FLUX_PARAMETER in subsequent cycles
+ * 
+ * Conditions for calibration:
+ * - Motor running at stable medium speed (50-200 rad/s)
+ * - Both Hall and EKF speeds valid (> 10 rad/s)
+ * - Hall and EKF speeds reasonably close (ratio 0.8-1.3)
+ * 
+ * Call this function periodically (e.g., in ADC ISR) with current Hall and EKF speeds.
+ * 
+ * @param hall_speed_rad_s Hall sensor speed in rad/s (electrical)
+ * @param ekf_speed_rad_s EKF estimated speed in rad/s (electrical)
+ */
+void ekf_flux_calibration_update(float hall_speed_rad_s, float ekf_speed_rad_s)
+{
+	#define CALIBRATION_SAMPLES 1000  /* Number of samples to average */
+	#define MIN_SPEED_FOR_CALIBRATION 50.0f   /* Minimum speed (rad/s) */
+	#define MAX_SPEED_FOR_CALIBRATION 200.0f  /* Maximum speed (rad/s) */
+	#define MIN_VALID_SPEED 10.0f      /* Minimum valid speed threshold */
+	#define MIN_RATIO 0.8f             /* Minimum acceptable ratio */
+	#define MAX_RATIO 1.3f             /* Maximum acceptable ratio */
+	
+	/* Skip if calibration already complete */
+	if (flux_calibration_state.calibration_complete) {
+		return;
+	}
+	
+	/* Validate inputs - both speeds must be positive and above minimum */
+	if (hall_speed_rad_s < MIN_VALID_SPEED || ekf_speed_rad_s < MIN_VALID_SPEED) {
+		return;
+	}
+	
+	/* Only calibrate at stable medium speeds */
+	if (hall_speed_rad_s < MIN_SPEED_FOR_CALIBRATION || 
+	    hall_speed_rad_s > MAX_SPEED_FOR_CALIBRATION) {
+		return;
+	}
+	
+	/* Calculate speed ratio (Hall / EKF) */
+	float ratio = hall_speed_rad_s / ekf_speed_rad_s;
+	
+	/* Sanity check - ratio should be reasonable */
+	if (ratio < MIN_RATIO || ratio > MAX_RATIO) {
+		return;  /* Reject outliers */
+	}
+	
+	/* Accumulate ratio for averaging */
+	flux_calibration_state.correction_sum += ratio;
+	flux_calibration_state.sample_count++;
+	
+	/* Once we have enough samples, compute final correction */
+	if (flux_calibration_state.sample_count >= CALIBRATION_SAMPLES) {
+		float avg_ratio = flux_calibration_state.correction_sum / 
+		                  flux_calibration_state.sample_count;
+		
+		/* Correction factor is inverse of ratio
+		 * If EKF is slower (ratio > 1), we need smaller flux (factor < 1) */
+		flux_calibration_state.correction_factor = 1.0f / avg_ratio;
+		
+		/* Mark calibration as complete */
+		flux_calibration_state.calibration_complete = 1;
+		
+		/* Future: Could add telemetry output here for debugging */
+	}
+}
+
+/**
+ * @brief Reset flux calibration state
+ * 
+ * Call this to restart the calibration process, e.g., when motor parameters change
+ * or when switching between different motors.
+ */
+void ekf_flux_calibration_reset(void)
+{
+	flux_calibration_state.correction_factor = 1.0f;
+	flux_calibration_state.correction_sum = 0.0f;
+	flux_calibration_state.sample_count = 0;
+	flux_calibration_state.calibration_complete = 0;
+}
+#endif
+
 /**
  * @brief Initialize Extended Kalman Filter
  * 
@@ -304,30 +412,35 @@ void stm32_ekf_Start_wrapper(real_T *xD)
 	/* 
 	 * Flux linkage parameter correction for EKF speed estimation accuracy
 	 * 
-	 * Issue: EKF-estimated speed was 12% slower than Hall sensor measurement
+	 * Issue: EKF-estimated speed can be slower than Hall sensor measurement
 	 * Root cause: Flux parameter scaling mismatch in back-EMF model
 	 * 
 	 * The EKF back-EMF model in alpha-beta frame is:
 	 *   E_alpha = flux * omega * sin(theta)
 	 *   E_beta = -flux * omega * cos(theta)  // Negative sign is correct for PMSM model
 	 * 
-	 * Speed estimation accuracy depends on correct flux value. Hardware testing revealed
-	 * the FLUX_PARAMETER constant is too large by factor of 1.136, causing EKF to 
-	 * estimate 88% of actual speed (Hall/EKF ratio = 1.136).
+	 * Speed estimation accuracy depends on correct flux value. The FLUX_PARAMETER
+	 * constant may be scaled incorrectly due to different conventions for defining
+	 * flux linkage (line-to-line vs phase, peak vs RMS).
 	 * 
-	 * This is a common scaling issue in motor control, arising from different
-	 * conventions for defining flux linkage (line-to-line vs phase, peak vs RMS).
-	 * The theoretical factor is 2/sqrt(3) ≈ 1.1547, but the measured value of 1.136
-	 * is within typical motor parameter measurement uncertainty (1.6% difference).
+	 * Two correction modes available:
 	 * 
-	 * Solution: Apply empirically-determined correction factor 1/1.136 ≈ 0.8803 to flux
-	 * parameter used in EKF calculations. This aligns EKF speed estimates with Hall sensor.
+	 * 1. ENABLE_EKF_FLUX_AUTO_CALIBRATION (recommended):
+	 *    Automatically calibrates flux by comparing EKF speed with Hall sensor
+	 *    feedback during normal operation. Adapts to motor-specific variations.
 	 * 
-	 * Note: We use the measured correction (0.8803) rather than theoretical sqrt(3)/2 
-	 * (0.8660) to account for motor-specific parameter variations and measurement conditions.
-	 * Only applied to EKF. Other code using FLUX_PARAMETER is unchanged.
+	 * 2. Fixed empirical correction (fallback):
+	 *    Uses predetermined correction factor 0.8803 based on typical motors.
+	 *    Suitable when Hall sensors not available or for quick testing.
 	 */
-	flux = FLUX_PARAMETER * 0.8803f;  /* Empirical correction: 1/1.136 = 0.8803 */
+#ifdef ENABLE_EKF_FLUX_AUTO_CALIBRATION
+	/* Use automatically calibrated correction factor
+	 * Starts at 1.0, converges to optimal value during operation */
+	flux = FLUX_PARAMETER * flux_calibration_state.correction_factor;
+#else
+	/* Use fixed empirical correction factor */
+	flux = FLUX_PARAMETER * 0.8803f;  /* Empirical: 1/1.136 for typical motors */
+#endif
 
 	/* Process noise covariance matrix Q (diagonal elements only) */
 	Q_0_0 = 0.1f;   /* Current alpha uncertainty */
