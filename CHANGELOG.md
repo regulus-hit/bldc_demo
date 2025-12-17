@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2025-12-17
+
+### Fixed
+- 🤖 **Key1 Direction Change Uncontrolled Spinning** (PR #16)
+  - Fixed bug where long press of key1 caused motor to spin extremely fast without control
+  - Root cause: motor_start() was being called immediately after direction change
+  - This caused motor to restart with new direction at low speed (25 Hz) while control system retained state from previous high-speed operation
+  - **Solution**: Remove motor_start() call and set motor_start_stop = 0
+    - Motor stops completely after direction change
+    - Direction is flipped
+    - User must press key1 short press to restart in new direction
+  - Matches original expected behavior: "won't spin on direction change"
+  - Modified file: `motor/low_task.c`
+  - Updated function and inline comments for clarity
+
 ## [1.5.2] - 2025-12-17
 
 ### Fixed
