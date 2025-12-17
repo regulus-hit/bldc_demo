@@ -456,7 +456,8 @@ void motor_run(void)
 
 	/* Send telemetry data to PC via UART (VOFA+ third-party GUI) */
 	/* Data: Phase A current, Phase B current, PWM waveform, Rotor position */
-	send_PC(FOC_Input.ia, FOC_Input.ib, FOC_Output.Tcmp1, FOC_Output.EKF[3]);
+//	send_PC(FOC_Input.ia, FOC_Input.ib, FOC_Output.Tcmp1, FOC_Output.EKF[3]);
+	send_PC(Speed_Ref, hall_speed, FOC_Input.ia, FOC_Input.ib);
 
 	/* Alternative: Custom PC application (commented out) */
 	/* SendWaveformData(FOC_Input.ia, FOC_Input.ib, FOC_Output.Tcmp1, FOC_Output.EKF[3], Speed_Ref*60, Speed_Fdk*60/6.28318548F); */
