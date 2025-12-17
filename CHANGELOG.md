@@ -12,6 +12,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2025-12-17
+
+### Fixed
+- 🤖 **ADRC Speed Loop Startup Initialization** (PR #12 continued) ⚠️ CRITICAL
+  - Fixed bug where ADRC speed controller fails during motor startup
+  - **Symptom**: Motor moves slightly and immediately stops when ADRC is enabled
+  - **Root cause**: Code attempts to set `Speed_Pid.I_Sum` which doesn't exist in ADRC structure
+    - ADRC uses ESO states (z1, z2, z3) instead of I_Sum (integral accumulator)
+    - Three locations in `motor/adc.c` (lines 245, 292, 363) tried to access non-existent field
+    - Caused memory corruption and ESO state corruption
+  - **Solution**: Added conditional compilation guards for PID vs ADRC initialization
+    ```c
+    #ifdef USE_SPEED_PID
+        Speed_Pid.I_Sum = Iq_ref;  // Pre-load integral
+    #endif
+    #ifdef USE_SPEED_ADRC
+        Speed_Pid.eso.z1 = current_speed;      // Initialize speed estimate
+        Speed_Pid.eso.z2 = 0.0f;               // Zero acceleration
+        Speed_Pid.eso.z3 = b0 * Iq_ref;        // Initialize disturbance estimate
+    #endif
+    ```
+  - Proper ESO state initialization ensures smooth transition from open-loop to closed-loop
+  - Fixed in all three sensor modes: HALL_FOC_SELECT, SENSORLESS_FOC_SELECT, HYBRID_HALL_EKF_SELECT
+  - Modified file: `motor/adc.c`
+  - Documentation updated: `docs/project_stat.md`
+
+### Technical Details
+- **PID Structure**: Contains `I_Sum` for integral accumulation
+- **ADRC Structure**: Contains `eso.z1`, `eso.z2`, `eso.z3` for Extended State Observer
+- **ESO Initialization Strategy**:
+  - z1 (speed): Initialize to current speed feedback to avoid tracking error
+  - z2 (acceleration): Set to zero during constant-current startup
+  - z3 (disturbance): Set to `b0 * Iq_ref` to match steady-state load
+- **Impact**: ADRC speed controller now functional on hardware (was completely non-functional)
+
 ## [1.5.2] - 2025-12-17
 
 ### Fixed
