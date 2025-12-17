@@ -51,11 +51,12 @@ void motor_stop(void)
  * @brief Low Frequency Control Task
  * 
  * Handles user input from three keys for motor control:
- * - Key1: Short press toggles motor start/stop; long press (>1s) reverses direction and stops motor
+ * - Key1: Short press (<1s) toggles motor start/stop; long press (>1s) reverses direction and stops motor
  * - Key2: Decreases speed reference by 5 Hz (minimum 25 Hz)
  * - Key3: Increases speed reference by 5 Hz (maximum 200 Hz)
  * 
- * This function is called at 100Hz from the SysTick interrupt handler.
+ * This function is called at 100Hz (every 10ms) from the SysTick interrupt handler.
+ * Key press duration is measured in 10ms ticks (100 ticks = 1 second).
  * It manages motor state transitions and speed adjustments based on user input.
  */
 void lowfreq_control_task(void)
