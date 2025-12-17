@@ -16,10 +16,12 @@
 #endif
 
 /* Include appropriate speed controller based on configuration */
+#ifdef USE_SPEED_PID
+#include "speed_pid.h"
+#endif
+
 #ifdef USE_SPEED_ADRC
 #include "speed_adrc.h"
-#else
-#include "speed_pid.h"
 #endif
 
 /* D-axis current PI controller parameters */

@@ -4,6 +4,7 @@
  * 
  * This file is compiled only when USE_SPEED_PID is defined
  **********************************/
+#include "main.h"
 #include "foc_define_parameter.h"
 
 #ifdef USE_SPEED_PID

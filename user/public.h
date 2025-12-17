@@ -15,6 +15,7 @@
 //#undef COPILOT_BUGFIX_VECTOR_SCALE
 
 #define ADC_OFFSET_CHECK
+//#undef ADC_OFFSET_CHECK
 
 /* PI macro for compatibility with existing code */
 #ifndef PI

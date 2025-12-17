@@ -241,7 +241,9 @@ void motor_run(void)
 		/* Open-loop startup mode */
 		FOC_Input.Id_ref = 0.0f;
 		FOC_Input.Iq_ref = Iq_ref;				/* Fixed startup current */
+#ifdef USE_SPEED_PID
 		Speed_Pid.I_Sum = Iq_ref;				/* Pre-load integral to prevent windup */
+#endif
 	}
 	
 	/* Position and speed from Hall sensors

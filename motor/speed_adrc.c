@@ -14,12 +14,12 @@
  * 
  * This file is compiled only when USE_SPEED_ADRC is defined
  **********************************/
+#include "main.h"
 #include "foc_define_parameter.h"
 
 #ifdef USE_SPEED_ADRC
 
 #include "speed_adrc.h"
-#include "main.h"  /* For MATH_2PI constant */
 
 #define SPEED_ADRC_PERIOD 0.001F    /* ADRC loop period: 1ms (1kHz) */
 

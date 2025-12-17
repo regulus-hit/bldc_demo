@@ -49,7 +49,13 @@
 
 #include "oled_display.h"
 
+#ifdef USE_SPEED_PID
 #include "speed_pid.h"
+#endif
+
+#ifdef USE_SPEED_ADRC
+#include "speed_adrc.h"
+#endif
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
