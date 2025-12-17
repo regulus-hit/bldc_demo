@@ -148,51 +148,102 @@ P_pred_0_3 = P_pred_0_2_saved * f2_3_2 + P_pred_0_3 * f2_3_3;  ✓
 
 ---
 
-### Bug #3: Speed PI Controller Formula ⚠️ CRITICAL
+### Bug #3: Speed PI Controller Formula and Gain Mismatch ⚠️ CRITICAL
 
 **File:** `motor/speed_pid.c`  
-**Line:** 50  
-**Commit:** a3fa93c
+**Lines:** 17-20, 56-62  
+**Commits:** a3fa93c (initial fix attempt), PR#12 (proper fix with gain adjustment)
 
 #### Problem
-Incorrect PI controller structure where integral term was multiplied by proportional gain:
+The speed PI controller initially used a non-standard formula where the integral term was multiplied by the proportional gain:
 
 ```c
-// WRONG: Implements Output = (error + integral) * Kp
+// Original implementation (non-standard but functional):
 temp = (error + current_pid_temp->I_Sum) * current_pid_temp->P_Gain;
 ```
 
-This is mathematically incorrect. The proportional and integral actions should be independent.
-
-#### Solution
-Standard PI control law:
+A previous fix attempt changed it to the standard form **without adjusting the gains**:
 
 ```c
-// CORRECT: Output = Kp * error + integral
+// "Fixed" formula (standard form but WRONG gains):
 temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
+```
+
+This caused the controller to lose control on hardware because **the integral action became 333x stronger**!
+
+#### Root Cause Analysis
+
+The original formula scales **both** the proportional and integral terms by `P_Gain`:
+```
+output = Kp * (e(t) + ∫[Ki*e(τ)]dτ)
+       = Kp*e(t) + Kp*∫[Ki*e(τ)]dτ
+```
+
+The standard formula only scales the proportional term by `P_Gain`:
+```
+output = Kp*e(t) + ∫[Ki*e(τ)]dτ
+```
+
+With original parameters (Kp = 0.003, Ki = 5.0):
+- **Original integral contribution:** `Kp * (Ki * integral) = 0.003 * (5.0 * integral) = 0.015 * integral`
+- **"Fixed" integral contribution:** `Ki * integral = 5.0 * integral`
+- **Ratio:** 5.0 / 0.015 = **333x stronger**!
+
+This massive increase in integral action caused severe instability and loss of control.
+
+#### Solution
+Use the standard PI formula **with properly adjusted gains**:
+
+```c
+// CORRECT: Standard form with adjusted Ki
+#ifdef COPILOT_BUGFIX_PI
+    temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
+    // Ki_new = Ki_old * Kp_old = 5.0 * 0.003 = 0.015
+    real32_T SPEED_PI_I = 0.015F;
+#else
+    temp = (error + current_pid_temp->I_Sum) * current_pid_temp->P_Gain;
+    // Original tuning for non-standard form
+    real32_T SPEED_PI_I = 5.0F;
+#endif
+real32_T SPEED_PI_P = 0.003F;  // Unchanged
 ```
 
 #### Mathematical Analysis
 
-**Wrong formula:**
-```
-u(t) = Kp * (e(t) + ∫e(τ)dτ)
-     = Kp*e(t) + Kp*∫e(τ)dτ
-```
-The integral term is scaled by Kp, which breaks independent tuning.
+**Gain Conversion Formula:**
+When converting from non-standard to standard PI form:
+- `Kp_new = Kp_old` (proportional gain unchanged)
+- `Ki_new = Ki_old × Kp_old` (integral gain must be scaled down)
 
-**Correct formula:**
-```
-u(t) = Kp*e(t) + Ki*∫e(τ)dτ
-```
-Where Ki is stored in the integral sum, allowing independent P and I gains.
+**Verification:**
+With adjusted gains (Kp = 0.003, Ki = 0.015):
+- **Standard form integral contribution:** `Ki * integral = 0.015 * integral`
+- **Original form integral contribution:** `Kp * (Ki_old * integral) = 0.003 * (5.0 * integral) = 0.015 * integral`
+- **Result:** ✅ Equivalent integral action!
 
-#### Impact
-- Incorrect gain relationships between P and I actions
-- Poor speed regulation and overshoot
-- Difficult or impossible to tune properly
-- Potential for instability
-- Speed reference tracking errors
+#### Why This Matters
+
+The original implementation worked but was non-standard. The attempted "fix" to standard form was mathematically correct in isolation but **didn't account for the gain tuning** that assumed the non-standard form. This is a classic example of why **gain tuning and formula structure are coupled** - changing one requires updating the other.
+
+The current loop PI controller (`motor/foc_algorithm.c`, line 330) already uses the standard form:
+```c
+temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
+```
+
+For consistency across the codebase and adherence to industry standards, we use the standard form for the speed loop as well, but **with properly scaled gains**.
+
+#### Impact (Before Fix)
+- Controller instability when "corrected" formula was enabled
+- Loss of control on real hardware
+- Severe oscillations and potential motor damage
+- Demonstrated the critical importance of gain tuning consistency
+
+#### Impact (After Fix)
+- ✅ Standard PI formula matching current loop controller
+- ✅ Equivalent control performance to original (properly scaled gains)
+- ✅ Industry-standard implementation for maintainability
+- ✅ Both forms available via `COPILOT_BUGFIX_PI` macro for validation
+- ✅ Comprehensive documentation of the issue and solution
 
 ---
 

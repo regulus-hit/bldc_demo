@@ -8,8 +8,13 @@
 //#define MATH_cos_30	0.866025388F
 #define MATH_cos_60		0.500F
 
-//#define COPILOT_BUGFIX_PI
-#undef COPILOT_BUGFIX_PI
+/* Enable standard PI formula with properly adjusted gains
+ * The original formula was: output = (error + integral) * Kp
+ * Standard formula is: output = Kp*error + Ki*integral
+ * This requires Ki_new = Ki_old * Kp_old = 5.0 * 0.003 = 0.015
+ * to maintain equivalent integral action */
+#define COPILOT_BUGFIX_PI
+//#undef COPILOT_BUGFIX_PI
 
 #define COPILOT_BUGFIX_VECTOR_SCALE
 //#undef COPILOT_BUGFIX_VECTOR_SCALE
