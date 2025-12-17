@@ -17,7 +17,8 @@
 #ifdef COPILOT_BUGFIX_PI
 /* Standard PI form: output = Kp*error + Ki*integral
  * With corrected formula, Ki must be scaled down by original Kp factor
- * to maintain equivalent integral action: Ki_new = Ki_old * Kp_old */
+ * to maintain equivalent integral action: Ki_new = Ki_old * Kp_old
+ * Calculation: 5.0 * 0.003 = 0.015 exactly (no precision loss) */
 real32_T SPEED_PI_I = 0.015F;      /* Was 5.0F with non-standard formula */
 #else
 /* Non-standard PI form: output = (error + integral) * Kp

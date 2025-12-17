@@ -80,7 +80,7 @@ Ratio = (Fixed integral) / (Original integral)
       = 333.33
 ```
 
-**The "fixed" version made the integral action 333 times stronger!**
+**The "fixed" version made the integral action 333.33 times stronger!**
 
 This massive increase in integral gain caused:
 - Severe oscillations

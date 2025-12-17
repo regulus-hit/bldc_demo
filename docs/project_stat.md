@@ -155,7 +155,7 @@ P_pred_0_3 = P_pred_0_2_saved * f2_3_2 + P_pred_0_3 * f2_3_3;  ✓
 **Commits:** a3fa93c (initial fix attempt), PR#12 (proper fix with gain adjustment)
 
 #### Problem
-The speed PI controller initially used a non-standard formula where the integral term was multiplied by the proportional gain:
+The speed PI controller originally used a non-standard formula where the integral term was multiplied by the proportional gain:
 
 ```c
 // Original implementation (non-standard but functional):
