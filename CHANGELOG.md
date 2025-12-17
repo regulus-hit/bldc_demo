@@ -12,6 +12,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.4] - 2025-12-17
+
+### Added
+- 🤖 **Mechanical Speed Averaging Over Pole Pairs** (PR #13)
+  - Implemented speed averaging to stabilize speed control in multi-pole motors
+  - Added `MOTOR_POLE_PAIRS` macro in `foc_define_parameter.h` (default: 7 pole pairs)
+  - Added `hall_mech_speed` variable for averaged mechanical speed measurement
+  - Implemented circular buffer to store Hall edge intervals over one mechanical rotation
+  - Buffer size: `MOTOR_POLE_PAIRS * 6` (6 Hall edges per electrical cycle)
+
+### Changed
+- 🤖 Speed feedback now uses `hall_mech_speed` instead of `hall_speed` in all sensor modes
+  - HALL_FOC_SELECT mode: Uses averaged mechanical speed for speed controller
+  - HYBRID_HALL_EKF_SELECT mode: Passes mechanical speed to hybrid observer
+  - Field-weakening control uses mechanical speed for activation threshold
+  - ADRC ESO initialization uses mechanical speed for smooth handoff
+- 🤖 Hall sensor module calculates both electrical and mechanical speed
+  - Electrical speed (`hall_speed`): Instantaneous, updated every Hall edge
+  - Mechanical speed (`hall_mech_speed`): Averaged over all pole pairs
+  - During buffer fill: mechanical speed = electrical speed / pole pairs
+
+### Fixed
+- 🤖 **Speed Oscillations from Pole-to-Pole Variations**
+  - **Symptom**: Inconsistent speed measurements observed with laser speedometer
+  - **Root cause**: Manufacturing variations between pole pairs cause speed oscillations
+    - Each pole pair may have slight differences in magnet strength/position
+    - Hall sensor measures electrical speed (one cycle per pole pair)
+    - Instantaneous electrical speed shows rapid oscillations
+    - Speed controller sees noisy feedback, leading to unstable control
+  - **Solution**: Average Hall edge intervals over one complete mechanical rotation
+    - Eliminates pole-to-pole variations by averaging over all poles
+    - Provides true mechanical speed that matches external measurements
+    - Circular buffer ensures efficient averaging without copying data
+  - Modified files: `motor/hall_sensor.c`, `motor/hall_sensor.h`, `motor/adc.c`, `motor/low_task.c`, `motor/foc_define_parameter.h`
+  - Documentation updated: `docs/project_stat.md`
+
+### Technical Details
+- **Buffer Mechanism**: Circular buffer with index wrapping
+- **Averaging Period**: One complete mechanical rotation (all pole pairs)
+- **ISR Safe**: Bounded loop iterations, no dynamic allocation
+- **Startup Behavior**: Uses instantaneous speed divided by pole pairs until buffer fills
+- **Performance**: Minimal overhead, simple arithmetic operations only
+
 ## [1.5.3] - 2025-12-17
 
 ### Fixed
