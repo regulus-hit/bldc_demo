@@ -169,9 +169,10 @@ The flux linkage parameter `FLUX_PARAMETER` used in the EKF back-EMF model was s
 
 **EKF Back-EMF Model:**
 ```c
-// In alpha-beta stationary frame:
+// In alpha-beta stationary frame (PMSM model):
 di_alpha/dt = -Rs/Ls * i_alpha + flux/Ls * omega * sin(theta) + v_alpha/Ls
 di_beta/dt = -Rs/Ls * i_beta - flux/Ls * omega * cos(theta) + v_beta/Ls
+// Note: Negative sign on beta back-EMF term is correct for PMSM in alpha-beta frame
 ```
 
 **Speed Estimation Dependency:**

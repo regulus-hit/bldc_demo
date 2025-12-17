@@ -309,7 +309,7 @@ void stm32_ekf_Start_wrapper(real_T *xD)
 	 * 
 	 * The EKF back-EMF model in alpha-beta frame is:
 	 *   E_alpha = flux * omega * sin(theta)
-	 *   E_beta = -flux * omega * cos(theta)
+	 *   E_beta = -flux * omega * cos(theta)  // Negative sign is correct for PMSM model
 	 * 
 	 * Speed estimation accuracy depends on correct flux value. Testing revealed
 	 * the FLUX_PARAMETER constant is too large by factor of 2/sqrt(3) ≈ 1.1547,
