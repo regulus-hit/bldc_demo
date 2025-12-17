@@ -39,13 +39,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Modified files: `motor/stm32_ekf_wrapper.c`
   - Comprehensive documentation added to `docs/project_stat.md`
 
+### Added
+- 🤖 **Automatic EKF Flux Calibration** (PR #13) 🎯 NEW FEATURE
+  - Self-calibrating flux correction using Hall sensor feedback
+  - Eliminates need for manual motor-specific correction factors
+  - Enabled by default via `ENABLE_EKF_FLUX_AUTO_CALIBRATION` macro
+  - **Algorithm**:
+    - Compares EKF speed with Hall sensor during operation
+    - Collects 1000 samples at stable speeds (50-200 rad/s)
+    - Averages ratio and computes optimal correction factor
+    - Automatically adapts to motor-specific characteristics
+  - **Benefits**:
+    - No manual tuning required per motor
+    - Accounts for manufacturing variations
+    - Adapts to measurement conditions
+    - Can be disabled for fixed correction (fallback to 0.8803)
+  - Modified files: `motor/stm32_ekf_wrapper.c`, `motor/adc.c`, `motor/foc_algorithm.c`, `motor/foc_define_parameter.h`
+
 ### Impact
 - ✅ EKF speed now matches Hall sensor measurements (error < 1%)
+- ✅ Self-calibrating - adapts to each motor automatically
 - ✅ No change to current control performance
 - ✅ Position estimation remains accurate
 - ✅ Parameter identification converges correctly (no feedback loop)
 - ✅ System reaches stable operation
-- ✅ Backward compatible (correction only in EKF wrapper Start function)
+- ✅ Backward compatible with option to use fixed correction
 
 ### Technical Details
 - Common scaling issue in motor control from different flux linkage conventions
