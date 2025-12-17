@@ -242,7 +242,17 @@ void motor_run(void)
 		FOC_Input.Id_ref = 0.0f;
 		FOC_Input.Iq_ref = Iq_ref;				/* Fixed startup current */
 #ifdef USE_SPEED_PID
-		Speed_Pid.I_Sum = Iq_ref;				/* Pre-load integral to prevent windup */
+		/* Pre-load integral to prevent windup during startup */
+		Speed_Pid.I_Sum = Iq_ref;
+#endif
+#ifdef USE_SPEED_ADRC
+		/* Initialize ADRC ESO states during open-loop startup
+		 * z1: Speed estimate - set to current Hall speed
+		 * z2: Acceleration estimate - set to zero (no acceleration during startup ramp)
+		 * z3: Disturbance estimate - set to current Iq for smooth handoff */
+		Speed_Pid.eso.z1 = hall_speed * 2.0f * PI;
+		Speed_Pid.eso.z2 = 0.0f;
+		Speed_Pid.eso.z3 = Speed_Pid.eso.b0 * Iq_ref;
 #endif
 	}
 	
@@ -289,7 +299,19 @@ void motor_run(void)
 		/* Open-loop startup mode - EKF converging */
 		FOC_Input.Id_ref = 0.0f;
 		FOC_Input.Iq_ref = Iq_ref;
+#ifdef USE_SPEED_PID
+		/* Pre-load integral to prevent windup during startup */
 		Speed_Pid.I_Sum = Iq_ref;
+#endif
+#ifdef USE_SPEED_ADRC
+		/* Initialize ADRC ESO states during open-loop startup
+		 * z1: Speed estimate - set to current EKF speed estimate
+		 * z2: Acceleration estimate - set to zero
+		 * z3: Disturbance estimate - set to current Iq for smooth handoff */
+		Speed_Pid.eso.z1 = FOC_Output.EKF[2];
+		Speed_Pid.eso.z2 = 0.0f;
+		Speed_Pid.eso.z3 = Speed_Pid.eso.b0 * Iq_ref;
+#endif
 	}
 	
 	/* Position and speed from Extended Kalman Filter */
@@ -360,7 +382,19 @@ void motor_run(void)
 		/* Open-loop startup mode */
 		FOC_Input.Id_ref = 0.0f;
 		FOC_Input.Iq_ref = Iq_ref;
+#ifdef USE_SPEED_PID
+		/* Pre-load integral to prevent windup during startup */
 		Speed_Pid.I_Sum = Iq_ref;
+#endif
+#ifdef USE_SPEED_ADRC
+		/* Initialize ADRC ESO states during open-loop startup
+		 * z1: Speed estimate - set to current fused speed estimate
+		 * z2: Acceleration estimate - set to zero
+		 * z3: Disturbance estimate - set to current Iq for smooth handoff */
+		Speed_Pid.eso.z1 = fused_speed;
+		Speed_Pid.eso.z2 = 0.0f;
+		Speed_Pid.eso.z3 = Speed_Pid.eso.b0 * Iq_ref;
+#endif
 	}
 	
 	/* Position and speed from hybrid observer (fused EKF+Hall) */
