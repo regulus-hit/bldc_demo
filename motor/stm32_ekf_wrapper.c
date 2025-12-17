@@ -412,9 +412,26 @@ void stm32_ekf_Update_wrapper(const real32_T *u, real32_T *y, real_T *xD)
 	Rs = u[4];    /* Stator resistance (Ohms) */
 	Ls = u[5];    /* Stator inductance (Henries) */
 	
-	/* Apply flux correction factor (same as in Start_wrapper) to maintain
-	 * consistent speed estimation accuracy throughout operation */
-	flux = u[6] * MATH_cos_30;  /* PM flux linkage (Webers) with sqrt(3)/2 correction */
+	/* 
+	 * Flux parameter from R_flux_identification - use directly without correction
+	 * 
+	 * After the flux correction fix is applied in Start_wrapper, the EKF operates
+	 * with the correctly-scaled flux. This causes it to estimate the correct speed,
+	 * which then feeds into R_flux_identification. R_flux_identification will then
+	 * converge to estimate the flux in the CORRECT scale (matching the corrected
+	 * Start_wrapper value).
+	 * 
+	 * If we applied the sqrt(3)/2 correction here, it would create a feedback loop:
+	 * 1. EKF with corrected flux estimates correct speed
+	 * 2. R_flux_identification sees correct speed, estimates correct flux
+	 * 3. We scale it down by 0.866
+	 * 4. EKF speed becomes too high (opposite problem!)
+	 * 5. R_flux_identification compensates by estimating even higher flux
+	 * 6. Loop diverges
+	 * 
+	 * Therefore: Use identified flux as-is (no correction in Update_wrapper).
+	 */
+	flux = u[6];  /* PM flux linkage (Webers) from parameter identification */
 
 	/*
 	 * Optional: Load covariance matrix from extended state vector
