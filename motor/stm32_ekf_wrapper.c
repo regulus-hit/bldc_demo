@@ -311,19 +311,23 @@ void stm32_ekf_Start_wrapper(real_T *xD)
 	 *   E_alpha = flux * omega * sin(theta)
 	 *   E_beta = -flux * omega * cos(theta)  // Negative sign is correct for PMSM model
 	 * 
-	 * Speed estimation accuracy depends on correct flux value. Testing revealed
-	 * the FLUX_PARAMETER constant is too large by factor of 2/sqrt(3) ≈ 1.1547,
-	 * causing EKF to estimate 88% of actual speed (Hall/EKF ratio = 1.136).
+	 * Speed estimation accuracy depends on correct flux value. Hardware testing revealed
+	 * the FLUX_PARAMETER constant is too large by factor of 1.136, causing EKF to 
+	 * estimate 88% of actual speed (Hall/EKF ratio = 1.136).
 	 * 
 	 * This is a common scaling issue in motor control, arising from different
 	 * conventions for defining flux linkage (line-to-line vs phase, peak vs RMS).
+	 * The theoretical factor is 2/sqrt(3) ≈ 1.1547, but the measured value of 1.136
+	 * is within typical motor parameter measurement uncertainty (1.6% difference).
 	 * 
-	 * Solution: Apply correction factor sqrt(3)/2 ≈ 0.866 to flux parameter
-	 * used in EKF calculations. This aligns EKF speed estimates with Hall sensor.
+	 * Solution: Apply empirically-determined correction factor 1/1.136 ≈ 0.8803 to flux
+	 * parameter used in EKF calculations. This aligns EKF speed estimates with Hall sensor.
 	 * 
-	 * Note: Only applied to EKF. Other code using FLUX_PARAMETER is unchanged.
+	 * Note: We use the measured correction (0.8803) rather than theoretical sqrt(3)/2 
+	 * (0.8660) to account for motor-specific parameter variations and measurement conditions.
+	 * Only applied to EKF. Other code using FLUX_PARAMETER is unchanged.
 	 */
-	flux = FLUX_PARAMETER * MATH_cos_30;  /* Corrected: MATH_cos_30 = sqrt(3)/2 = 0.866 */
+	flux = FLUX_PARAMETER * 0.8803f;  /* Empirical correction: 1/1.136 = 0.8803 */
 
 	/* Process noise covariance matrix Q (diagonal elements only) */
 	Q_0_0 = 0.1f;   /* Current alpha uncertainty */
