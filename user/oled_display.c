@@ -58,7 +58,7 @@ void oled_display_handle(void)
 			}
 
 			OLED_ShowNum(7*8,2,(uint32_t)Speed_Ref,3,16);
-			OLED_ShowNum(7*8,3,(uint32_t)Speed_Fdk,3,16);
+			OLED_ShowNum(7*8,3,(uint32_t)(Speed_Fdk / MATH_2PI),3,16);
 			OLED_ShowNum(7*8,4,(uint32_t)hall_speed,3,16);
 			OLED_ShowNum(7*8,5,(uint32_t)EKF_Hz,3,16);
 
