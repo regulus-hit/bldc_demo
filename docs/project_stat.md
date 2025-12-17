@@ -185,19 +185,24 @@ If the flux parameter is incorrect:
 omega_estimated = Back_EMF_measured / flux_used
 omega_true = Back_EMF_measured / flux_true
 
-If flux_used = 1.136 * flux_true:
-  omega_estimated = omega_true / 1.136 ≈ 0.88 * omega_true
+If flux_used = k * flux_true:
+  omega_estimated = omega_true / k
+
+Measured: omega_EKF / omega_Hall = 0.88
+Therefore: k = 1 / 0.88 = 1.136
 ```
 
-This exactly matches the observed 12% speed error!
+This matches the observed 12% speed error (EKF estimates 88% of actual speed)!
 
-**Why 2/sqrt(3)?**
-The factor `2/sqrt(3) = 1.1547` is a common scaling factor in three-phase motor control, arising from:
+**Why approximately 2/sqrt(3)?**
+The measured factor `1.136` is very close to `2/sqrt(3) = 1.1547` (within 1.6%), which is a common scaling factor in three-phase motor control. This small difference (1.6%) is well within typical motor parameter measurement uncertainty and motor-to-motor variations.
+
+This factor arises from:
 - Different conventions for flux linkage definition (line-to-line vs phase)
-- Peak vs RMS voltage/flux relationships
+- Peak vs RMS voltage/flux relationships  
 - Different Clarke transform normalizations (amplitude-invariant vs power-invariant)
 
-The code uses a power-invariant Clarke transform (`2/3` scaling), but the flux parameter appears to have been calibrated using a different convention.
+The code uses a power-invariant Clarke transform (`2/3` scaling), but the flux parameter appears to have been calibrated using a different convention, causing the `2/sqrt(3)` scaling mismatch.
 
 #### Solution
 
@@ -215,7 +220,7 @@ flux = u[6] * MATH_cos_30;  // Apply same correction to identified flux
 1. **Minimal Change:** Only affects EKF speed estimation, preserving other code
 2. **Surgical:** Applied at the point where flux enters EKF calculations
 3. **Correct Physics:** Aligns flux definition with Clarke transform convention used
-4. **Verified:** Factor of 1.136 ≈ 2/sqrt(3) = 1.1547 (within 1.6% - likely motor parameter tolerance)
+4. **Verified:** Measured factor 1.136 is close to theoretical 2/sqrt(3) = 1.1547 (differs by 1.6%, consistent with motor parameter measurement uncertainty)
 
 #### Impact
 - ✅ EKF speed estimation now matches Hall sensor measurements

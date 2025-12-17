@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Hall sensor directly measures electrical period → speed calculation verified correct
     - EKF infers speed from back-EMF magnitude: `E = flux × omega`
     - If `flux_used` is larger than `flux_true`, EKF estimates lower speed
-    - Measured error factor (1.136) matches 2/sqrt(3) within 1.6% (motor parameter tolerance)
+    - Measured error factor (1.136) is consistent with theoretical 2/sqrt(3) = 1.1547 (differs by 1.6%, within motor parameter measurement uncertainty)
   - **Solution**: Apply correction factor sqrt(3)/2 ≈ 0.866 to flux parameter in EKF
     - `flux = FLUX_PARAMETER × MATH_cos_30` (where MATH_cos_30 = sqrt(3)/2)
     - Applied in both `stm32_ekf_Start_wrapper()` and `stm32_ekf_Update_wrapper()`
