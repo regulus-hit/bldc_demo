@@ -14,7 +14,17 @@
 #define SPEED_PID_PERIOD 0.001F		/* Speed loop period: 1ms (1kHz) */
 
 /* Speed PI controller parameters */
+#ifdef COPILOT_BUGFIX_PI
+/* Standard PI form: output = Kp*error + Ki*integral
+ * With corrected formula, Ki must be scaled down by original Kp factor
+ * to maintain equivalent integral action: Ki_new = Ki_old * Kp_old
+ * Calculation: 5.0 * 0.003 = 0.015 exactly (no precision loss) */
+real32_T SPEED_PI_I = 0.015F;      /* Was 5.0F with non-standard formula */
+#else
+/* Non-standard PI form: output = (error + integral) * Kp
+ * Original tuning parameters for this form */
 real32_T SPEED_PI_I = 5.0F;
+#endif
 real32_T SPEED_PI_KB = 0.015F;
 real32_T SPEED_PI_LOW_LIMIT = -5.0F;
 real32_T SPEED_PI_P = 0.003F;
@@ -54,10 +64,16 @@ void speed_controller_calc(real32_T ref_temp, real32_T fdb_temp, real32_T* out_t
 	error = MATH_2PI * ref_temp - fdb_temp;
 
 #ifdef COPILOT_BUGFIX_PI
-	/* PI control law: P + I (standard form) */
+	/* Standard PI control law: output = Kp*error + Ki*integral
+	 * This is the textbook-correct form matching current loop PI controller.
+	 * Requires adjusted Ki gain (0.015F instead of 5.0F) to maintain
+	 * equivalent integral action with original non-standard form. */
 	temp = current_pid_temp->P_Gain * error + current_pid_temp->I_Sum;
 #else
-	/* original PI control law: P + I */
+	/* Non-standard PI control law: output = (error + integral) * Kp
+	 * This was the original implementation. While mathematically non-standard,
+	 * it works correctly with the original tuning (Ki = 5.0F).
+	 * The P_Gain scales both proportional AND integral terms. */
 	temp = (error + current_pid_temp->I_Sum) * current_pid_temp->P_Gain;
 #endif
 

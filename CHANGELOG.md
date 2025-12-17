@@ -12,6 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2025-12-17
+
+### Fixed
+- 🤖 **Speed PI Controller Gain Mismatch** (PR #12) ⚠️ CRITICAL
+  - Fixed bug where previous "correction" to standard PI formula caused controller instability
+  - Root cause: Formula was changed to standard form without adjusting integral gain
+  - Previous fix made integral action 333x stronger (Ki=5.0 vs effective Ki=0.015)
+  - **Solution**: Properly adjusted integral gain when using standard PI formula
+    - Standard form: `Ki_new = Ki_old × Kp_old = 5.0 × 0.003 = 0.015`
+    - Original form: `Ki_old = 5.0` (but scaled by Kp in formula)
+  - Both formulas now produce equivalent control action
+  - Macro `COPILOT_BUGFIX_PI` now enables standard form with correct gains
+  - Modified files: `motor/speed_pid.c`, `user/public.h`
+  - Comprehensive documentation added to `docs/project_stat.md`
+
+### Changed
+- 🤖 Speed PI controller now uses standard PI formula by default (matching current loop)
+- 🤖 Original non-standard formula still available by undefining `COPILOT_BUGFIX_PI`
+- 🤖 Added detailed comments explaining gain scaling and formula coupling
+- 🤖 Enhanced documentation explaining why formula change requires gain adjustment
+
+### Technical Details
+- **Original (non-standard)**: `output = (error + integral) × Kp`, with Ki=5.0
+- **Standard (corrected)**: `output = Kp×error + integral`, with Ki=0.015
+- Both produce: `output = 0.003×error + 0.015×integral` (equivalent!)
+- Demonstrates critical importance of gain tuning consistency with formula structure
+
 ## [1.5.1] - 2025-12-16
 
 ### Added
