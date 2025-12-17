@@ -8,6 +8,26 @@
 #define SPEED_LOOP_CLOSE_RAD_S  50.0f  //速度环切入闭环的速度  单位: rad/s
 
 /*******************************************************************************
+ * Motor Mechanical Parameters
+ ******************************************************************************/
+/* Number of motor pole pairs
+ * This defines how many electrical cycles complete one mechanical rotation.
+ * Used for mechanical speed calculation by averaging over pole pairs.
+ * 
+ * Common values:
+ * - Small hobby motors: 2-4 pole pairs
+ * - Medium BLDC motors: 4-7 pole pairs  
+ * - Large motors: 8+ pole pairs
+ * 
+ * To determine your motor's pole pairs:
+ * 1. Count the number of magnets on the rotor, divide by 2
+ * 2. Or measure: rotate motor slowly and count Hall edge cycles per revolution
+ * 
+ * Example: Motor with 14 poles (7 pole pairs) completes 7 electrical cycles 
+ * per mechanical revolution */
+#define MOTOR_POLE_PAIRS        7      /* Motor pole pairs (default: 7 for common BLDC) */
+
+/*******************************************************************************
  * FOC Sensor Mode Selection
  * Select ONE of the following three modes:
  * - HALL_FOC_SELECT: Pure Hall sensor feedback (no EKF)

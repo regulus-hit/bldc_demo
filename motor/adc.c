@@ -211,19 +211,21 @@ void motor_run(void)
 
 #ifdef HALL_FOC_SELECT	/* Hall sensor based FOC control */
 
-	/* Check if speed is high enough for closed-loop speed control */
-	if ((hall_speed * 2.0f * PI) > SPEED_LOOP_CLOSE_RAD_S)
+	/* Check if speed is high enough for closed-loop speed control
+	 * Use mechanical speed for more stable speed control */
+	if ((hall_mech_speed * 2.0f * PI) > SPEED_LOOP_CLOSE_RAD_S)
 	{
 		/* Closed-loop speed control active */
 		FOC_Input.Id_ref = 0.0f;				/* Zero d-axis current for maximum torque/amp */
-		Speed_Fdk = hall_speed * 2.0f * PI;		/* Speed feedback from Hall sensors */
+		Speed_Fdk = hall_mech_speed * 2.0f * PI;	/* Speed feedback using averaged mechanical speed */
 		FOC_Input.Iq_ref = Speed_Pid_Out;		/* Iq from speed controller */
 		
 #ifdef ENABLE_FIELD_WEAKENING
 		/* Field-Weakening Control: Inject negative Id current at high speeds
 		 * This extends the speed range by weakening the rotor flux
-		 * Id_fw = -K_fw * (|speed| - base_speed) when speed > base_speed */
-		float speed_abs = fabs(hall_speed * 2.0f * PI);
+		 * Id_fw = -K_fw * (|speed| - base_speed) when speed > base_speed 
+		 * Use mechanical speed for stable field-weakening activation */
+		float speed_abs = fabs(hall_mech_speed * 2.0f * PI);
 		if (speed_abs > FIELD_WEAKENING_BASE_SPEED)
 		{
 			float Id_fw = -FIELD_WEAKENING_GAIN * (speed_abs - FIELD_WEAKENING_BASE_SPEED);
@@ -247,23 +249,24 @@ void motor_run(void)
 #endif
 #ifdef USE_SPEED_ADRC
 		/* Initialize ADRC ESO states during open-loop startup
-		 * z1: Speed estimate - set to current Hall speed
+		 * z1: Speed estimate - set to current mechanical speed
 		 * z2: Acceleration estimate - set to zero (no acceleration during startup ramp)
 		 * z3: Disturbance estimate - set to current Iq for smooth handoff */
-		Speed_Pid.eso.z1 = hall_speed * 2.0f * PI;
+		Speed_Pid.eso.z1 = hall_mech_speed * 2.0f * PI;
 		Speed_Pid.eso.z2 = 0.0f;
 		Speed_Pid.eso.z3 = Speed_Pid.eso.b0 * Iq_ref;
 #endif
 	}
 	
 	/* Position and speed from Hall sensors
-	 * Use interpolated position when available for higher resolution */
+	 * Use interpolated position when available for higher resolution
+	 * Use mechanical speed for stable speed control */
 #ifdef ENABLE_HALL_INTERPOLATION
 	FOC_Input.theta = hall_angle_interpolated;  /* Interpolated position (higher resolution) */
 #else
 	FOC_Input.theta = hall_angle;               /* Raw Hall position (60° resolution) */
 #endif
-	FOC_Input.speed_fdk = hall_speed * 2.0f * PI;
+	FOC_Input.speed_fdk = hall_mech_speed * 2.0f * PI;  /* Mechanical speed for speed controller */
 
 #endif
 
@@ -342,12 +345,13 @@ void motor_run(void)
 	
 	float fused_position, fused_speed;
 	
-	/* Update hybrid observer with both EKF and Hall measurements */
+	/* Update hybrid observer with both EKF and Hall measurements
+	 * Use mechanical speed for more stable observer fusion */
 	hybrid_observer_update(
 		FOC_Output.EKF[3] + myref,  /* EKF position estimate (rad) */
 		FOC_Output.EKF[2],           /* EKF speed estimate (rad/s) */
 		hall_angle,                  /* Hall sensor position (rad) */
-		hall_speed * MATH_2PI,       /* Hall speed converted: Hz → rad/s (mechanical * 2π) */
+		hall_mech_speed * MATH_2PI,  /* Mechanical speed: Hz → rad/s (mechanical * 2π) */
 		&fused_position,             /* Output: fused position */
 		&fused_speed                 /* Output: fused speed */
 	);

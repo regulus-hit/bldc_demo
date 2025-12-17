@@ -14,9 +14,10 @@
 #define HALL_ANGLE_FACTOR (float)((float)HALL_TIM_CLOCK/(float)HALL_SAMPLE_FREQ*PI/3.0f)
 #define HALL_SPEED_FACTOR (float)((float)HALL_TIM_CLOCK/6.0f)
 
-extern float hall_angle;		/* Rotor angle from Hall sensors */
+extern float hall_angle;		/* Rotor angle from Hall sensors (electrical) */
 extern float hall_angle_add;	/* Angle increment per sample */
-extern float hall_speed;		/* Rotor speed from Hall sensors */
+extern float hall_speed;		/* Rotor speed from Hall sensors (electrical, Hz) */
+extern float hall_mech_speed;	/* Mechanical speed averaged over pole pairs (Hz) */
 
 #ifdef ENABLE_HALL_INTERPOLATION
 /* Hall sensor interpolation state */
