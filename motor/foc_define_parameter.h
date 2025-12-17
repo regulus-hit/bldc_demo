@@ -41,8 +41,8 @@
 
 /* Dead-Time Compensation: Compensates voltage error from gate driver dead-time
  * Improves low-speed torque and reduces current distortion */
-//#define ENABLE_DEADTIME_COMPENSATION
-#undef ENABLE_DEADTIME_COMPENSATION
+#define ENABLE_DEADTIME_COMPENSATION
+//#undef ENABLE_DEADTIME_COMPENSATION
 
 /* Field-Weakening Control: Extends speed range beyond base speed
  * Enables operation at higher speeds by injecting negative Id current */
@@ -57,8 +57,8 @@
 /* Hall Sensor Position Interpolation: Interpolates position between Hall edges
  * Provides higher resolution position feedback for HALL_FOC_SELECT mode
  * Only active when HALL_FOC_SELECT mode is enabled */
-//#define ENABLE_HALL_INTERPOLATION
-#undef ENABLE_HALL_INTERPOLATION
+#define ENABLE_HALL_INTERPOLATION
+//#undef ENABLE_HALL_INTERPOLATION
 
 /* PID Auto-Tuning: Automatically optimizes current loop PI controller gains
  * Uses identified motor parameters (R, L) to calculate optimal Kp/Ki values
