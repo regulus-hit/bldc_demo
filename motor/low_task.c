@@ -139,18 +139,18 @@ void lowfreq_control_task(void)
 	{
 		if (motor_direction != -1.0f)
 		{
-			Speed_Ref += 5.0f;  /* Step size: 5 Hz */
-			if (Speed_Ref > 200.0f)  /* Maximum speed: 200 Hz */
+			Speed_Ref += 10.0f;  /* Step size: 5 Hz */
+			if (Speed_Ref > 500.0f)  /* Maximum speed: 200 Hz */
 			{
-				Speed_Ref = 200.0f;
+				Speed_Ref = 500.0f;
 			}
 		}
 		else
 		{
-			Speed_Ref -= 5.0f;  /* Step size: 5 Hz */
-			if (Speed_Ref < -200.0f)  /* Maximum speed (reverse): -200 Hz */
+			Speed_Ref -= 10.0f;  /* Step size: 5 Hz */
+			if (Speed_Ref < -500.0f)  /* Maximum speed (reverse): -200 Hz */
 			{
-				Speed_Ref = -200.0f;
+				Speed_Ref = -500.0f;
 			}
 		}
 		key3_flag = 0;
